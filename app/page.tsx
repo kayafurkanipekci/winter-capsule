@@ -62,7 +62,7 @@ export default function Home() {
               Zaman Kapsülü
             </h1>
             <p className="font-merriweather text-lg md:text-xl text-[#e8e4d9] opacity-90 italic">
-              "Furkan için bir yeni yıl mesajı bırak. <br/>Ama dikkat et: 31 Aralık'a kadar okunamaz!"
+              "Yeni yıl için bir yeni yıl mesajı bırak. <br/>Ama dikkat et: 31 Aralık'a kadar okunamaz!"
             </p>
             <button 
               onClick={() => setViewState("writing")}

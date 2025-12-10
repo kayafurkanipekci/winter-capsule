@@ -17,7 +17,7 @@ interface PageProps {
 
 export default function UserPage({ params }: PageProps) {
   const resolvedParams = use(params);
-  const username = resolvedParams.username;
+  const username = decodeURIComponent(resolvedParams.username);
 
   // EKRAN DURUMLARI: 'loading' | 'not_found' | 'intro' | 'writing' | 'success'
   const [viewState, setViewState] = useState<"loading" | "not_found" | "intro" | "writing" | "success">("loading");

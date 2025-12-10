@@ -27,7 +27,7 @@ interface PageProps {
 
 export default function PersonalDashboard({ params }: PageProps) {
   const resolvedParams = use(params);
-  const username = resolvedParams.username;
+  const username = decodeURIComponent(resolvedParams.username);
 
   // --- DURUMLAR ---
   const [isAuthenticated, setIsAuthenticated] = useState(false);
