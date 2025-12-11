@@ -75,7 +75,7 @@ export default function LoginPage() {
                             type="text"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            placeholder="örn: furkan"
+                            placeholder="örn: isminiz"
                             className="w-full bg-[#e6d5aa]/50 border-b-2 border-[#8b7355] p-3 text-[#3e2723] text-lg font-merriweather outline-none focus:border-[#8b0000] placeholder-amber-900/30"
                             required
                         />
