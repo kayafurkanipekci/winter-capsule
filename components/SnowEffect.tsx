@@ -36,7 +36,7 @@ export default function SnowEffect() {
             delay: Math.random() * 10, // Rastgele başlama
             ease: "linear",
           }}
-          className="absolute w-1.5 h-1.5 bg-amber-100 rounded-full blur-[1px] shadow-[0_0_5px_rgba(251,191,36,0.8)]"
+          className="absolute w-1.5 h-1.5 bg-blue-400 rounded-full blur-[1px] shadow-[0_0_6px_rgba(100,150,255,0.9)]"
           style={{
             left: `${Math.random() * 100}%`, // Soldan % olarak rastgele konum
           }}

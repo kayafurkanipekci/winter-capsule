@@ -19,17 +19,25 @@ export const metadata: Metadata = {
   description: "Yılbaşında açılmak üzere mühürlü mektuplar bırakın.",
 };
 
+import { Providers } from "./providers";
+import ThemeToggle from "@/components/ThemeToggle";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr">
+    <html lang="tr" suppressHydrationWarning>
       <body
-        className={`${alice.variable} ${courgette.variable} antialiased bg-[#0a0f0d] text-[#e8e4d9] overflow-x-hidden`}
+        className={`${alice.variable} ${courgette.variable} antialiased overflow-x-hidden`}
       >
-        {children}
+        <Providers>
+          <div className="fixed top-4 right-4 z-[9999]">
+            <ThemeToggle />
+          </div>
+          {children}
+        </Providers>
       </body>
     </html>
   );

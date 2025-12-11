@@ -85,7 +85,7 @@ export default function CreateBox() {
   };
 
   return (
-    <main className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden bg-[#0a0f0d]">
+    <main className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden bg-background">
       <SnowEffect />
 
       <motion.div

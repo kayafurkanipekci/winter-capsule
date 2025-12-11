@@ -58,7 +58,7 @@ export default function UserPage({ params }: PageProps) {
   };
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center p-4 overflow-hidden bg-[#0a0f0d]">
+    <main className="relative flex min-h-screen flex-col items-center justify-center p-4 overflow-hidden bg-background">
       <SnowEffect />
 
       <AnimatePresence mode="wait">
@@ -109,15 +109,15 @@ export default function UserPage({ params }: PageProps) {
             exit={{ opacity: 0, y: -20 }}
             className="z-10 text-center space-y-8 max-w-2xl px-6"
           >
-            <h1 className="font-cinzel text-4xl md:text-6xl font-bold text-amber-400 drop-shadow-lg">
+            <h1 className="font-cinzel text-4xl md:text-6xl font-bold text-[#3e2723] dark:text-amber-400 drop-shadow-lg">
               {username}
             </h1>
-            <p className="font-merriweather text-lg text-[#e8e4d9] opacity-90 italic">
+            <p className="font-merriweather text-lg text-[#3e2723] dark:text-[#e8e4d9] opacity-90 italic">
               için yılbaşına özel, mühürlü bir mesaj bırak.
             </p>
             <button
               onClick={() => setViewState("writing")}
-              className="mt-8 px-8 py-4 bg-[#3e2723] text-amber-100 rounded-lg font-cinzel text-xl hover:scale-105 transition-all shadow-lg border border-amber-500/30"
+              className="mt-8 px-8 py-4 bg-[#3e2723] text-amber-100 rounded-lg font-cinzel text-xl hover:scale-105 transition-all shadow-lg border border-[#5d4037] dark:border-amber-500/30"
             >
               Mektup Yaz
             </button>

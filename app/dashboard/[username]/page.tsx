@@ -11,7 +11,7 @@ import { Copy, Check, HelpCircle } from "lucide-react";
 
 // TEST İÇİN TARİHİ GEÇMİŞ BİR TARİH YAP (Örn: "2023-01-01")
 // GERÇEK TARİH: "2026-01-01T00:00:00"
-const TARGET_DATE = new Date("2023-01-01T00:00:00").getTime();
+const TARGET_DATE = new Date("2026-01-01T00:00:00").getTime();
 
 interface Message {
   id: string;
@@ -215,7 +215,7 @@ export default function PersonalDashboard({ params }: PageProps) {
   // --- KİLİT EKRANI ---
   if (!isAuthenticated) {
     return (
-      <main className="relative min-h-screen bg-[#0a0f0d] flex items-center justify-center p-4">
+      <main className="relative min-h-screen bg-background flex items-center justify-center p-4">
         <SnowEffect />
         <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="z-10 bg-[#f4e4bc] p-8 rounded shadow-2xl border-4 border-[#3e2723] w-full max-w-sm text-center relative">
           <h1 className="font-cinzel text-2xl text-[#3e2723] font-bold mb-2">{username}</h1>
@@ -299,7 +299,7 @@ export default function PersonalDashboard({ params }: PageProps) {
 
   // --- ANA EKRAN ---
   return (
-    <main className="relative min-h-screen bg-[#0a0f0d] overflow-y-auto custom-scrollbar flex flex-col items-center p-4">
+    <main className="relative min-h-screen bg-background overflow-y-auto custom-scrollbar flex flex-col items-center p-4">
       <SnowEffect />
 
       {/* Mektup Okuyucu */}
@@ -313,19 +313,19 @@ export default function PersonalDashboard({ params }: PageProps) {
       </AnimatePresence>
 
       <div className="absolute top-6 left-6 z-50 flex gap-4">
-        <Link href="/" className="text-amber-500/50 hover:text-amber-400 font-cinzel text-sm">← Çıkış</Link>
+        <Link href="/" className="text-[#3e2723] dark:text-amber-500/50 hover:text-[#5d4037] dark:hover:text-amber-400 font-cinzel text-sm transition-colors">← Çıkış</Link>
         <button onClick={() => {
           navigator.clipboard.writeText(`${window.location.origin}/${username}`);
           showNotification("Link panoya kopyalandı!");
-        }} className="text-amber-200/80 hover:text-white font-cinzel text-sm border-b border-dashed border-amber-500/30">🔗 Linki Kopyala</button>
+        }} className="text-[#3e2723] dark:text-amber-200/80 hover:text-[#5d4037] dark:hover:text-white font-cinzel text-sm border-b border-dashed border-[#3e2723] dark:border-amber-500/30 transition-colors">🔗 Linki Kopyala</button>
       </div>
 
       <div className="z-10 w-full max-w-5xl flex flex-col items-center mt-12 gap-8">
 
         {/* Başlık */}
         <div className="text-center">
-          <div className="inline-block bg-black/40 px-6 py-2 rounded-full border border-amber-500/30 backdrop-blur-md mb-4">
-            <p className="font-cinzel text-amber-100 text-lg">
+          <div className="inline-block bg-[#f4e4bc] dark:bg-black/40 px-6 py-2 rounded-full border border-[#3e2723] dark:border-amber-500/30 backdrop-blur-md mb-4 shadow-md dark:shadow-none">
+            <p className="font-cinzel text-[#3e2723] dark:text-amber-100 text-lg">
               {isTimeUp ? "Mühürler Açıldı" : ` ${timeLeft}`}
             </p>
           </div>
@@ -365,7 +365,7 @@ export default function PersonalDashboard({ params }: PageProps) {
             />
 
             <div className="text-center space-y-2">
-              <p className="font-merriweather text-amber-100/40 text-sm max-w-xs italic">
+              <p className="font-merriweather text-[#5d4037] dark:text-amber-100/40 text-sm max-w-xs italic">
                 {isTimeUp
                   ? (unreadCount > 0 ? "Kutuya tıkla, mektupları sırayla oku." : "Tüm mektupları bitirdin!")
                   : "Mektuplar burada güvenle saklanıyor."}
@@ -373,7 +373,7 @@ export default function PersonalDashboard({ params }: PageProps) {
 
               {/* Kalan mesaj bilgisi */}
               {isTimeUp && unreadCount > 0 && (
-                <p className="text-amber-500 font-bold text-xs animate-pulse">
+                <p className="text-[#8b0000] dark:text-amber-500 font-bold text-xs animate-pulse">
                   {unreadCount} okunmamış mektubun var
                 </p>
               )}
