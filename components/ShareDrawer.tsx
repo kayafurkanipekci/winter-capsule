@@ -23,7 +23,7 @@ export default function ShareDrawer({ isOpen, onClose, username }: ShareDrawerPr
         }
     }, [username]);
 
-    const shareText = `Yeni yıl için bana anonim bir mesaj bırak! 🎄✨`;
+    const shareText = `Yeni yıl için bana anonim bir mesaj bırak!`;
 
     const handleCopy = () => {
         navigator.clipboard.writeText(shareUrl);
