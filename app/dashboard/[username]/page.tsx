@@ -7,7 +7,8 @@ import Link from "next/link";
 import SnowEffect from "@/components/SnowEffect";
 import LetterReader from "@/components/LetterReader";
 import Mailbox from "@/components/Mailbox";
-import { Copy, Check, HelpCircle } from "lucide-react";
+import { Copy, Check, HelpCircle, Share2 } from "lucide-react";
+import ShareDrawer from "@/components/ShareDrawer";
 
 // TEST İÇİN TARİHİ GEÇMİŞ BİR TARİH YAP (Örn: "2023-01-01")
 // GERÇEK TARİH: "2026-01-01T00:00:00"
@@ -50,6 +51,7 @@ export default function PersonalDashboard({ params }: PageProps) {
   const [showForgotDrawer, setShowForgotDrawer] = useState(false);
   const [notification, setNotification] = useState<{ show: boolean, message: string }>({ show: false, message: "" });
   const [emailCopied, setEmailCopied] = useState(false);
+  const [showShareDrawer, setShowShareDrawer] = useState(false);
 
   // Okunmamış mektup sayısı (Rozet ve kilit mantığı için)
   const unreadCount = messages.filter(m => !m.is_read).length;
@@ -314,10 +316,9 @@ export default function PersonalDashboard({ params }: PageProps) {
 
       <div className="absolute top-6 left-6 z-50 flex gap-4">
         <Link href="/" className="text-[#3e2723] dark:text-amber-500/50 hover:text-[#5d4037] dark:hover:text-amber-400 font-cinzel text-sm transition-colors">← Çıkış</Link>
-        <button onClick={() => {
-          navigator.clipboard.writeText(`${window.location.origin}/${username}`);
-          showNotification("Link panoya kopyalandı!");
-        }} className="text-[#3e2723] dark:text-amber-200/80 hover:text-[#5d4037] dark:hover:text-white font-cinzel text-sm border-b border-dashed border-[#3e2723] dark:border-amber-500/30 transition-colors">🔗 Linki Kopyala</button>
+        <button onClick={() => setShowShareDrawer(true)} className="text-[#3e2723] dark:text-amber-200/80 hover:text-[#5d4037] dark:hover:text-white font-cinzel text-sm border-b border-dashed border-[#3e2723] dark:border-amber-500/30 transition-colors flex items-center gap-1">
+          <Share2 size={14} /> Paylaş
+        </button>
       </div>
 
       <div className="z-10 w-full max-w-5xl flex flex-col items-center mt-12 gap-8">
@@ -433,6 +434,12 @@ export default function PersonalDashboard({ params }: PageProps) {
         </AnimatePresence>
 
       </div>
+
+      <ShareDrawer
+        isOpen={showShareDrawer}
+        onClose={() => setShowShareDrawer(false)}
+        username={username}
+      />
     </main>
   );
 }

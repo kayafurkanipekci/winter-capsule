@@ -6,7 +6,9 @@ import SnowEffect from "@/components/SnowEffect";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, Share2 } from "lucide-react";
+import ShareDrawer from "@/components/ShareDrawer";
+import CalendarReminder from "@/components/CalendarReminder";
 
 export default function CreateBox() {
   const router = useRouter();
@@ -15,6 +17,7 @@ export default function CreateBox() {
   const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
   const [createdLink, setCreatedLink] = useState("");
   const [isCopied, setIsCopied] = useState(false);
+  const [showShareDrawer, setShowShareDrawer] = useState(false);
 
   const handleCreate = async () => {
     // Basit kontroller
@@ -182,36 +185,40 @@ export default function CreateBox() {
                   Arkadaşlarına gönderip mesajları toplamaya başla.
                 </p>
 
-                {/* Link Kutusu */}
-                <div
-                  onClick={copyToClipboard}
-                  className="bg-[#e6d5aa]/50 p-4 rounded border border-[#8b7355]/30 flex items-center justify-between cursor-pointer active:scale-95 transition-transform"
-                >
-                  <span className="font-mono text-[#3e2723] text-sm truncate mr-4">
-                    {createdLink}
-                  </span>
-                  <div className="text-[#8b0000]">
-                    {isCopied ? <Check size={20} /> : <Copy size={20} />}
+                <div className="flex flex-col gap-3">
+                  {/* PAYLAŞ BUTONU */}
+                  <button
+                    onClick={() => setShowShareDrawer(true)}
+                    className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-cinzel font-bold rounded shadow-lg hover:scale-[1.02] transition-transform flex items-center justify-center gap-2"
+                  >
+                    <Share2 size={20} />
+                    PAYLAŞ & DAVET ET
+                  </button>
+
+                  <button
+                    onClick={goToBox}
+                    className="w-full py-3 bg-[#3e2723] text-[#f4e4bc] font-cinzel font-bold rounded shadow hover:bg-[#5d4037] transition-all"
+                  >
+                    KUTUMA GİT
+                  </button>
+
+                  {/* TAKVİM HATIRLATICI */}
+                  <div className="mt-2">
+                    <CalendarReminder />
                   </div>
                 </div>
 
-                {isCopied && (
-                  <div className="text-green-600 text-sm font-bold animate-pulse">
-                    Link Kopyalandı!
-                  </div>
-                )}
-
-                <button
-                  onClick={goToBox}
-                  className="w-full py-3 bg-[#3e2723] text-[#f4e4bc] font-cinzel font-bold rounded shadow hover:bg-[#5d4037] transition-all"
-                >
-                  KUTUMA GİT
-                </button>
               </div>
             </motion.div>
           </>
         )}
       </AnimatePresence>
+
+      <ShareDrawer
+        isOpen={showShareDrawer}
+        onClose={() => setShowShareDrawer(false)}
+        username={formData.username} // Created linkten parse etmek yerine formdan alabiliriz çünkü başarılı ise değişmemiştir
+      />
     </main>
   );
 }
