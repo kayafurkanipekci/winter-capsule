@@ -5,7 +5,8 @@ import { supabase } from "@/lib/supabase";
 import SnowEffect from "@/components/SnowEffect";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { Copy, Check } from "lucide-react"; // I need to make sure lucide-react is available, it likely is since PenLine was used.
+import Link from "next/link";
+import { Copy, Check } from "lucide-react";
 
 export default function CreateBox() {
   const router = useRouter();
@@ -85,7 +86,7 @@ export default function CreateBox() {
   };
 
   return (
-    <main className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden bg-background">
+    <main className="relative min-h-screen flex items-center justify-center p-4 overflow-y-auto bg-background">
       <SnowEffect />
 
       <motion.div
@@ -140,6 +141,11 @@ export default function CreateBox() {
           </button>
 
         </div>
+
+        <div className="mt-4 text-center">
+          <Link href="/" className="text-[#8b7355] text-xs hover:text-[#5d4037] font-cinzel">← Ana Sayfaya Dön</Link>
+        </div>
+
       </motion.div>
 
       {/* SUCCESS DRAWER */}

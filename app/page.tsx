@@ -24,6 +24,7 @@ export default function Home() {
             <h1 className="font-cinzel text-5xl md:text-7xl font-bold text-[#3e2723] dark:text-amber-400 drop-shadow-[0_0_15px_rgba(62,39,35,0.2)] dark:drop-shadow-[0_0_15px_rgba(251,191,36,0.4)]">
               Zaman Kapsülü
             </h1>
+            <div className="absolute -top-12 -right-8 text-6xl opacity-80 rotate-12"></div>
           </div>
 
           <p className="font-merriweather text-lg md:text-xl text-[#3e2723] dark:text-[#e8e4d9] opacity-90 italic leading-relaxed">
