@@ -10,6 +10,8 @@ import { Copy, Check, Share2 } from "lucide-react";
 import ShareDrawer from "@/components/ShareDrawer";
 import CalendarReminder from "@/components/CalendarReminder";
 
+import WarningPopup from "@/components/WarningPopup";
+
 export default function CreateBox() {
   const router = useRouter();
   const [formData, setFormData] = useState({ username: "", pin: "" });
@@ -18,6 +20,7 @@ export default function CreateBox() {
   const [createdLink, setCreatedLink] = useState("");
   const [isCopied, setIsCopied] = useState(false);
   const [showShareDrawer, setShowShareDrawer] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
 
   const handleCreate = async () => {
     // Basit kontroller
@@ -26,16 +29,16 @@ export default function CreateBox() {
       return;
     }
 
+    // Boşluk kontrolü
+    if (/\s/.test(formData.username)) {
+      setShowWarning(true);
+      return;
+    }
+
     setLoading(true);
 
-    // 1. Kullanıcı adını olduğu gibi al (büyük/küçük harf koru), sadece baştaki/sondaki boşlukları sil
-    const cleanUsername = formData.username.trim();
-    // İstersek içindeki boşlukları da silebiliriz ama "Furkan İpekçi" gibi bir isimde boşluk kalsın mı? 
-    // Link olacağı için boşlukları silmek veya tireye çevirmek mantıklı ama kullanıcı "otomatik yapmasın" dedi. 
-    // Ancak URL'de boşluk sorun olur. Genelde username'de boşluk olmaz.
-    // Kullanıcının "ismim Furkan olsun ama link furkan olsun" isteği yok, "isimler hakkında ... büyük harf yapıyor yapmasın" dedi.
-    // Ben yine de boşlukları kaldırayım ki URL bozulmasın, ama casing'i koruyayım.
-    const finalUsername = cleanUsername.replace(/\s/g, "");
+    // Boşluk kontrolü yapıldığı için trim yeterli
+    const finalUsername = formData.username.trim();
 
     try {
       // 2. Veritabanına kaydet
@@ -218,6 +221,13 @@ export default function CreateBox() {
         isOpen={showShareDrawer}
         onClose={() => setShowShareDrawer(false)}
         username={formData.username} // Created linkten parse etmek yerine formdan alabiliriz çünkü başarılı ise değişmemiştir
+      />
+
+      <WarningPopup
+        isOpen={showWarning}
+        onClose={() => setShowWarning(false)}
+        title="Uyarı"
+        message="Kullanıcı adı boşluk içeremez! Lütfen ismini bitişik yaz."
       />
     </main>
   );
