@@ -209,7 +209,7 @@ export default function PersonalDashboard({ params }: PageProps) {
               {t.dashboard.minFourHint}
             </p>
 
-            {currentSeasonInfo.isUnlocked && (
+            {(currentSeasonInfo.isUnlocked || currentSeasonInfo.status !== "collecting") && (
               <button
                 onClick={() =>
                   router.push(

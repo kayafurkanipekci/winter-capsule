@@ -23,6 +23,7 @@ export interface Translations {
     usernameLabel: string;
     usernamePlaceholder: string;
     pinLabel: string;
+    showWrongGuessLabel: string;
     creating: string;
     createButton: string;
     backHome: string;
@@ -41,7 +42,8 @@ export interface Translations {
       title: string;
       descriptionLine1: string;
       descriptionLine2: string;
-      rememberedNotice: string;
+      copyLink: string;
+      copied: string;
       minFourNotice: string;
       shareInvite: string;
       goToBox: string;
@@ -133,6 +135,14 @@ export interface Translations {
     alreadySubmittedTitle: string;
     alreadySubmittedDescription: string;
     introSubtitle: string;
+    continueAnonymous: string;
+    createOrLogin: string;
+    authPanel: {
+      registerTab: string;
+      loginTab: string;
+      submitAndContinue: string;
+      back: string;
+    };
     writeLetter: string;
     sendError: string;
     form: {
@@ -142,23 +152,30 @@ export interface Translations {
       clueTextLabel: string;
       clueTextPlaceholder: string;
       clueTextHint: string;
-      clueExtraLabel: string;
-      clueExtraPlaceholder: string;
-      cluePhotoLabel: string;
+      extraCluesTitle: string;
+      extraCluesHint: string;
+      addTextClue: string;
+      addPhotoClue: string;
+      extraCluePlaceholder: string;
       cluePhotoHint: string;
+      removeClue: string;
+      compressing: string;
+      nextToNote: string;
+      cancel: string;
+    };
+    noteStep: {
+      title: string;
+      subtitle: string;
+      placeholder: string;
+      photoLabel: string;
       selectPhoto: string;
       removePhoto: string;
-      compressing: string;
-      noteLabel: string;
-      notePlaceholder: string;
-      notePhotoLabel: string;
-      showWrongGuessLabel: string;
+      backToClues: string;
       previewButton: string;
-      cancel: string;
+      skipToPreview: string;
     };
     preview: {
       title: string;
-      immutableWarning: string;
       backToEdit: string;
       sealAndSend: string;
       sending: string;

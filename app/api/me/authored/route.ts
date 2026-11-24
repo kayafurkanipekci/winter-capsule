@@ -31,18 +31,34 @@ export async function GET() {
     const receiverIds = Array.from(new Set(entriesList.map((e) => e.receiver_id)));
     const seasons = Array.from(new Set(entriesList.map((e) => e.season)));
 
-    const [{ data: receivers }, { data: sessions }] = await Promise.all([
-      supabase.from("users").select("id, full_name").in("id", receiverIds),
-      supabase
-        .from("game_sessions")
-        .select("id, owner_id, season, mode, status")
-        .in("owner_id", receiverIds)
-        .in("season", seasons),
-    ]);
+    let receivers: Array<{ id: string; full_name: string; show_wrong_guess?: boolean }> = [];
+    const { data: receiversWithFlag, error: recvErr } = await supabase
+      .from("users")
+      .select("id, full_name, show_wrong_guess")
+      .in("id", receiverIds);
 
-    const receiverMap = new Map<string, string>();
-    for (const r of receivers ?? []) {
-      receiverMap.set(r.id, r.full_name);
+    if (recvErr) {
+      const { data: fallbackReceivers } = await supabase
+        .from("users")
+        .select("id, full_name")
+        .in("id", receiverIds);
+      receivers = fallbackReceivers ?? [];
+    } else {
+      receivers = receiversWithFlag ?? [];
+    }
+
+    const { data: sessions } = await supabase
+      .from("game_sessions")
+      .select("id, owner_id, season, mode, status")
+      .in("owner_id", receiverIds)
+      .in("season", seasons);
+
+    const receiverMap = new Map<string, { fullName: string; showWrongGuess: boolean }>();
+    for (const r of receivers) {
+      receiverMap.set(r.id, {
+        fullName: r.full_name,
+        showWrongGuess: Boolean(r.show_wrong_guess),
+      });
     }
 
     const sessionMap = new Map<string, NonNullable<typeof sessions>[number]>();
@@ -99,7 +115,9 @@ export async function GET() {
     }
 
     const result = entriesList.map((entry) => {
-      const receiverName = receiverMap.get(entry.receiver_id) ?? "";
+      const receiverInfo = receiverMap.get(entry.receiver_id);
+      const receiverName = receiverInfo?.fullName ?? "";
+      const allowWrongGuess = Boolean(receiverInfo?.showWrongGuess || entry.show_wrong_guess);
       const session = sessionMap.get(`${entry.receiver_id}:${entry.season}`);
 
       if (!session || session.status !== "finished") {
@@ -150,7 +168,7 @@ export async function GET() {
       }
 
       const guessedName =
-        entry.show_wrong_guess && card.guessed_card_id
+        allowWrongGuess && card.guessed_card_id
           ? (guessedAuthorMap.get(card.guessed_card_id) ?? null)
           : null;
 

@@ -6,13 +6,14 @@ import WarningPopup from "@/components/WarningPopup";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import {
-  AlertTriangle,
   Camera,
   Check,
   HelpCircle,
   Lock,
   PenLine,
+  Plus,
   Trash2,
+  UserPlus,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/context";
 import { compressImageToJpeg } from "@/lib/image/compress";
@@ -33,7 +34,9 @@ type ViewState =
   | "box_closed"
   | "already_submitted"
   | "intro"
-  | "writing"
+  | "auth"
+  | "clues"
+  | "note"
   | "preview"
   | "sealing"
   | "success";
@@ -51,14 +54,21 @@ export default function UserPage({ params }: PageProps) {
   const [viewState, setViewState] = useState<ViewState>("loading");
   const [boxInfo, setBoxInfo] = useState<BoxInfoResponse | null>(null);
 
+  // Inline auth state for guests who choose to create an account or log in
+  const [authTab, setAuthTab] = useState<"register" | "login">("register");
+  const [authFullName, setAuthFullName] = useState("");
+  const [authUsername, setAuthUsername] = useState("");
+  const [authPin, setAuthPin] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+
+  // Clues & note state
   const [authorName, setAuthorName] = useState("");
   const [clueText, setClueText] = useState("");
-  const [clueExtra, setClueExtra] = useState("");
-  const [note, setNote] = useState("");
-  const [showWrongGuess, setShowWrongGuess] = useState(false);
-
+  const [extraTextClues, setExtraTextClues] = useState<string[]>([]);
   const [cluePhoto, setCluePhoto] = useState<File | null>(null);
   const [cluePhotoPreview, setCluePhotoPreview] = useState<string | null>(null);
+
+  const [note, setNote] = useState("");
   const [notePhoto, setNotePhoto] = useState<File | null>(null);
   const [notePhotoPreview, setNotePhotoPreview] = useState<string | null>(null);
   const [compressingField, setCompressingField] = useState<"clue" | "note" | null>(null);
@@ -111,11 +121,12 @@ export default function UserPage({ params }: PageProps) {
     };
   }, [cluePhotoPreview, notePhotoPreview]);
 
-  const handlePhotoSelect = async (
-    target: "clue" | "note",
-    file: File | undefined
-  ) => {
+  const extraClueCount = extraTextClues.length + (cluePhoto ? 1 : 0);
+
+  const handlePhotoSelect = async (target: "clue" | "note", file: File | undefined) => {
     if (!file) return;
+    if (target === "clue" && !cluePhoto && extraClueCount >= 2) return;
+
     setCompressingField(target);
     try {
       const compressed = await compressImageToJpeg(file);
@@ -149,7 +160,69 @@ export default function UserPage({ params }: PageProps) {
     }
   };
 
-  const handleGoToPreview = () => {
+  const handleInlineAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (authLoading) return;
+    setAuthLoading(true);
+
+    try {
+      const endpoint = authTab === "register" ? "/api/auth/register" : "/api/auth/login";
+      const payload =
+        authTab === "register"
+          ? { fullName: authFullName, username: authUsername.trim(), pin: authPin }
+          : { username: authUsername.trim(), pin: authPin };
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        const errorMap: Record<string, string> = {
+          full_name_invalid: t.create.errors.fullNameInvalid,
+          username_has_spaces: t.create.warningNoSpaces,
+          username_invalid: t.create.errors.usernameInvalid,
+          username_reserved: t.create.errors.usernameReserved,
+          username_taken: t.create.errors.usernameTaken,
+          pin_invalid: t.create.errors.pinInvalid,
+          user_not_found: t.login.notFound.title,
+          wrong_pin: t.login.wrongPin,
+        };
+        setWarningMessage(errorMap[data.error] ?? t.create.errors.genericError);
+        setAuthLoading(false);
+        return;
+      }
+
+      // Refresh box status for the newly authenticated user
+      const boxRes = await fetch(`/api/box/${encodeURIComponent(routeUsername)}`);
+      const updatedBox: BoxInfoResponse | null = boxRes.ok ? await boxRes.json() : null;
+      if (updatedBox) {
+        setBoxInfo(updatedBox);
+        if (updatedBox.viewer) {
+          setAuthorName(updatedBox.viewer.fullName);
+        }
+        if (updatedBox.isOwner) {
+          setViewState("is_owner");
+        } else if (updatedBox.alreadySubmitted) {
+          setViewState("already_submitted");
+        } else {
+          setViewState("clues");
+        }
+      } else {
+        setAuthorName(data.user.fullName);
+        setViewState("clues");
+      }
+    } catch (err) {
+      console.error("Inline auth error:", err);
+      setWarningMessage(t.create.errors.genericError);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleNextToNote = () => {
     const trimmedName = authorName.trim().replace(/\s+/g, " ");
     if (!boxInfo?.viewer) {
       const words = trimmedName.split(" ").filter(Boolean);
@@ -165,7 +238,7 @@ export default function UserPage({ params }: PageProps) {
       return;
     }
 
-    setViewState("preview");
+    setViewState("note");
   };
 
   const handleConfirmSend = async () => {
@@ -179,9 +252,10 @@ export default function UserPage({ params }: PageProps) {
         fd.set("authorName", authorName.trim());
       }
       fd.set("clueText", clueText.trim());
-      if (clueExtra.trim()) fd.set("clueExtra", clueExtra.trim());
+      const cleanedExtras = extraTextClues.map((c) => c.trim()).filter(Boolean);
+      if (cleanedExtras[0]) fd.set("clueExtra1", cleanedExtras[0]);
+      if (cleanedExtras[1]) fd.set("clueExtra2", cleanedExtras[1]);
       if (note.trim()) fd.set("note", note.trim());
-      fd.set("showWrongGuess", showWrongGuess ? "true" : "false");
       if (cluePhoto) fd.set("cluePhoto", cluePhoto);
       if (notePhoto) fd.set("notePhoto", notePhoto);
 
@@ -214,7 +288,6 @@ export default function UserPage({ params }: PageProps) {
         return;
       }
 
-      // Play envelope folding -> sealed -> flying animation
       setViewState("sealing");
       setSealStage("folding");
       setTimeout(() => setSealStage("sealed"), 1200);
@@ -232,6 +305,7 @@ export default function UserPage({ params }: PageProps) {
 
   const currentDay = new Date().getDate().toString();
   const displayReceiver = boxInfo?.box.fullName ?? routeUsername;
+  const cleanedExtras = extraTextClues.map((c) => c.trim()).filter(Boolean);
 
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center p-4 overflow-y-auto bg-background">
@@ -321,18 +395,142 @@ export default function UserPage({ params }: PageProps) {
             <p className="font-merriweather text-lg text-[#3e2723] dark:text-[#e8e4d9] opacity-90 italic">
               {t.userPage.introSubtitle}
             </p>
-            <button
-              onClick={() => setViewState("writing")}
-              className="mt-8 px-8 py-4 bg-[#3e2723] text-amber-100 rounded-lg font-cinzel text-xl hover:scale-105 transition-all shadow-lg border border-[#5d4037] dark:border-amber-500/30"
-            >
-              {t.userPage.writeLetter}
-            </button>
+
+            {boxInfo?.viewer ? (
+              <button
+                onClick={() => setViewState("clues")}
+                className="mt-8 px-8 py-4 bg-[#3e2723] text-amber-100 rounded-lg font-cinzel text-xl hover:scale-105 transition-all shadow-lg border border-[#5d4037] dark:border-amber-500/30"
+              >
+                {t.userPage.writeLetter}
+              </button>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg mx-auto pt-2">
+                <button
+                  onClick={() => setViewState("clues")}
+                  className="w-full min-h-[56px] py-3.5 px-5 bg-[#3e2723] text-[#f4e4bc] rounded-lg font-cinzel text-base font-bold hover:bg-[#5d4037] hover:scale-105 transition-all shadow-lg flex items-center justify-center text-center"
+                >
+                  {t.userPage.continueAnonymous}
+                </button>
+                <button
+                  onClick={() => setViewState("auth")}
+                  className="w-full min-h-[56px] py-3.5 px-5 bg-[#8b0000] text-white rounded-lg font-cinzel text-base font-bold hover:bg-[#a50000] hover:scale-105 transition-all shadow-lg flex items-center justify-center gap-2 text-center"
+                >
+                  <UserPlus size={18} className="shrink-0" />
+                  <span>{t.userPage.createOrLogin}</span>
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
 
-        {viewState === "writing" && (
+        {/* INLINE REGISTER / LOGIN FOR INVITED GUEST */}
+        {viewState === "auth" && (
           <motion.div
-            key="writing"
+            key="auth"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            className="z-20 w-full max-w-md bg-[#f4e4bc] p-6 md:p-8 rounded shadow-2xl border-4 border-[#3e2723] space-y-5"
+          >
+            <div className="flex border-b border-[#8b7355]/30">
+              <button
+                type="button"
+                onClick={() => setAuthTab("register")}
+                className={`flex-1 py-2 font-cinzel text-sm font-bold border-b-2 transition-colors ${
+                  authTab === "register"
+                    ? "border-[#8b0000] text-[#8b0000]"
+                    : "border-transparent text-[#8b7355]"
+                }`}
+              >
+                {t.userPage.authPanel.registerTab}
+              </button>
+              <button
+                type="button"
+                onClick={() => setAuthTab("login")}
+                className={`flex-1 py-2 font-cinzel text-sm font-bold border-b-2 transition-colors ${
+                  authTab === "login"
+                    ? "border-[#8b0000] text-[#8b0000]"
+                    : "border-transparent text-[#8b7355]"
+                }`}
+              >
+                {t.userPage.authPanel.loginTab}
+              </button>
+            </div>
+
+            <form onSubmit={handleInlineAuth} className="space-y-4">
+              {authTab === "register" && (
+                <div>
+                  <label className="block font-cinzel text-[#3e2723] text-sm mb-1">
+                    {t.create.fullNameLabel}
+                  </label>
+                  <input
+                    type="text"
+                    value={authFullName}
+                    onChange={(e) => setAuthFullName(e.target.value)}
+                    placeholder={t.create.fullNamePlaceholder}
+                    maxLength={60}
+                    required
+                    className="w-full bg-[#e6d5aa]/50 border-b-2 border-[#8b7355] p-2 text-[#3e2723] font-merriweather outline-none focus:border-[#8b0000]"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block font-cinzel text-[#3e2723] text-sm mb-1">
+                  {t.create.usernameLabel}
+                </label>
+                <input
+                  type="text"
+                  value={authUsername}
+                  onChange={(e) => setAuthUsername(e.target.value)}
+                  placeholder={t.create.usernamePlaceholder}
+                  maxLength={24}
+                  required
+                  className="w-full bg-[#e6d5aa]/50 border-b-2 border-[#8b7355] p-2 text-[#3e2723] font-merriweather outline-none focus:border-[#8b0000]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-cinzel text-[#3e2723] text-sm mb-1">
+                  {t.create.pinLabel}
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={4}
+                  value={authPin}
+                  onChange={(e) => setAuthPin(e.target.value.replace(/[^0-9]/g, ""))}
+                  placeholder="****"
+                  style={{ WebkitTextSecurity: "disc" } as React.CSSProperties}
+                  required
+                  className="w-full bg-[#e6d5aa]/50 border-b-2 border-[#8b7355] p-2 text-center tracking-[1em] text-[#3e2723] font-bold outline-none focus:border-[#8b0000]"
+                />
+              </div>
+
+              <div className="flex items-stretch gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setViewState("intro")}
+                  className="flex-1 min-h-[44px] py-2.5 bg-[#e6d5aa] text-[#3e2723] font-cinzel font-bold text-sm rounded border border-[#8b7355] flex items-center justify-center"
+                >
+                  {t.userPage.authPanel.back}
+                </button>
+                <button
+                  type="submit"
+                  disabled={authLoading}
+                  className="flex-1 min-h-[44px] py-2.5 bg-[#8b0000] text-[#f4e4bc] font-cinzel font-bold text-sm rounded hover:bg-[#a50000] disabled:opacity-60 flex items-center justify-center"
+                >
+                  {authLoading ? t.create.creating : t.userPage.authPanel.submitAndContinue}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        )}
+
+        {/* STEP 1: CLUES */}
+        {viewState === "clues" && (
+          <motion.div
+            key="clues"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
@@ -367,7 +565,7 @@ export default function UserPage({ params }: PageProps) {
                 )}
               </div>
 
-              {/* Main Clue */}
+              {/* Main Clue (Required) */}
               <div>
                 <label className="block font-cinzel text-[#3e2723] text-sm font-bold mb-1">
                   {t.userPage.form.clueTextLabel}
@@ -388,132 +586,101 @@ export default function UserPage({ params }: PageProps) {
                 </div>
               </div>
 
-              {/* Optional Extra Clue */}
-              <div>
-                <label className="block font-cinzel text-[#3e2723] text-sm mb-1">
-                  {t.userPage.form.clueExtraLabel}
-                </label>
-                <input
-                  type="text"
-                  value={clueExtra}
-                  onChange={(e) => setClueExtra(e.target.value)}
-                  maxLength={200}
-                  placeholder={t.userPage.form.clueExtraPlaceholder}
-                  className="w-full bg-[#e6d5aa]/40 border border-[#8b7355]/40 rounded p-2 text-[#3e2723] font-merriweather text-sm outline-none focus:border-[#8b0000]"
-                />
-              </div>
+              {/* Optional Extra Clues (Up to 2 more; at most 1 can be a photo) */}
+              <div className="pt-2 border-t border-[#8b7355]/30 space-y-3">
+                <div>
+                  <p className="font-cinzel text-[#3e2723] text-sm font-bold">
+                    {t.userPage.form.extraCluesTitle}
+                  </p>
+                  <p className="text-[11px] text-[#5d4037] font-merriweather italic">
+                    {t.userPage.form.extraCluesHint}
+                  </p>
+                </div>
 
-              {/* Optional Clue Photo */}
-              <div>
-                <label className="block font-cinzel text-[#3e2723] text-sm mb-1">
-                  {t.userPage.form.cluePhotoLabel}
-                </label>
-                <p className="text-[11px] text-[#5d4037] mb-2 font-merriweather italic">
-                  {t.userPage.form.cluePhotoHint}
-                </p>
-                {cluePhotoPreview ? (
-                  <div className="relative inline-block">
-                    <img
-                      src={cluePhotoPreview}
-                      alt="Clue preview"
-                      className="h-28 w-28 object-cover rounded border-2 border-[#3e2723]"
+                {extraTextClues.map((val, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={val}
+                      maxLength={extraTextClues.length > 1 ? 90 : 200}
+                      onChange={(e) => {
+                        const next = [...extraTextClues];
+                        next[idx] = e.target.value;
+                        setExtraTextClues(next);
+                      }}
+                      placeholder={t.userPage.form.extraCluePlaceholder}
+                      className="flex-1 bg-[#e6d5aa]/40 border border-[#8b7355]/40 rounded p-2 text-[#3e2723] font-merriweather text-sm outline-none focus:border-[#8b0000]"
                     />
                     <button
                       type="button"
-                      onClick={() => clearPhoto("clue")}
-                      className="absolute -top-2 -right-2 bg-[#8b0000] text-white rounded-full p-1 shadow"
-                      aria-label={t.userPage.form.removePhoto}
+                      onClick={() =>
+                        setExtraTextClues(extraTextClues.filter((_, i) => i !== idx))
+                      }
+                      className="p-2 text-[#8b0000] hover:bg-[#8b0000]/10 rounded"
+                      aria-label={t.userPage.form.removeClue}
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={16} />
                     </button>
                   </div>
-                ) : (
-                  <label className="inline-flex items-center gap-2 px-4 py-2 bg-[#e6d5aa] border border-[#8b7355] rounded cursor-pointer text-xs font-cinzel text-[#3e2723] hover:bg-[#d9c594]">
-                    <Camera size={16} />
-                    <span>
-                      {compressingField === "clue"
-                        ? t.userPage.form.compressing
-                        : t.userPage.form.selectPhoto}
-                    </span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      disabled={compressingField !== null}
-                      onChange={(e) => handlePhotoSelect("clue", e.target.files?.[0])}
-                    />
-                  </label>
-                )}
-              </div>
+                ))}
 
-              {/* Optional Note & Note Photo */}
-              <div className="pt-2 border-t border-[#8b7355]/30 space-y-4">
-                <div>
-                  <label className="block font-cinzel text-[#3e2723] text-sm mb-1">
-                    {t.userPage.form.noteLabel}
-                  </label>
-                  <textarea
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    maxLength={2000}
-                    rows={3}
-                    placeholder={t.userPage.form.notePlaceholder}
-                    className="w-full bg-[#e6d5aa]/40 border border-[#8b7355]/40 rounded p-3 text-[#3e2723] font-hand text-base outline-none focus:border-[#8b0000] resize-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-cinzel text-[#3e2723] text-sm mb-1">
-                    {t.userPage.form.notePhotoLabel}
-                  </label>
-                  {notePhotoPreview ? (
+                {cluePhotoPreview && (
+                  <div className="space-y-1">
                     <div className="relative inline-block">
                       <img
-                        src={notePhotoPreview}
-                        alt="Note preview"
+                        src={cluePhotoPreview}
+                        alt="Clue preview"
                         className="h-28 w-28 object-cover rounded border-2 border-[#3e2723]"
                       />
                       <button
                         type="button"
-                        onClick={() => clearPhoto("note")}
+                        onClick={() => clearPhoto("clue")}
                         className="absolute -top-2 -right-2 bg-[#8b0000] text-white rounded-full p-1 shadow"
-                        aria-label={t.userPage.form.removePhoto}
+                        aria-label={t.userPage.form.removeClue}
                       >
                         <Trash2 size={14} />
                       </button>
                     </div>
-                  ) : (
-                    <label className="inline-flex items-center gap-2 px-4 py-2 bg-[#e6d5aa] border border-[#8b7355] rounded cursor-pointer text-xs font-cinzel text-[#3e2723] hover:bg-[#d9c594]">
-                      <Camera size={16} />
-                      <span>
-                        {compressingField === "note"
-                          ? t.userPage.form.compressing
-                          : t.userPage.form.selectPhoto}
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        disabled={compressingField !== null}
-                        onChange={(e) => handlePhotoSelect("note", e.target.files?.[0])}
-                      />
-                    </label>
-                  )}
-                </div>
-              </div>
+                  </div>
+                )}
 
-              {/* Privacy toggle (default OFF) */}
-              <label className="flex items-center gap-3 pt-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={showWrongGuess}
-                  onChange={(e) => setShowWrongGuess(e.target.checked)}
-                  className="w-4 h-4 accent-[#8b0000]"
-                />
-                <span className="font-merriweather text-xs text-[#3e2723]">
-                  {t.userPage.form.showWrongGuessLabel}
-                </span>
-              </label>
+                {extraClueCount < 2 && (
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setExtraTextClues([...extraTextClues, ""])}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#e6d5aa] border border-[#8b7355] rounded text-xs font-cinzel text-[#3e2723] hover:bg-[#d9c594]"
+                    >
+                      <Plus size={14} />
+                      {t.userPage.form.addTextClue}
+                    </button>
+
+                    {!cluePhoto && (
+                      <label className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#e6d5aa] border border-[#8b7355] rounded cursor-pointer text-xs font-cinzel text-[#3e2723] hover:bg-[#d9c594]">
+                        <Camera size={14} />
+                        <span>
+                          {compressingField === "clue"
+                            ? t.userPage.form.compressing
+                            : t.userPage.form.addPhotoClue}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={compressingField !== null}
+                          onChange={(e) => handlePhotoSelect("clue", e.target.files?.[0])}
+                        />
+                      </label>
+                    )}
+                  </div>
+                )}
+
+                {!cluePhoto && extraClueCount < 2 && (
+                  <p className="text-[11px] text-[#5d4037] font-merriweather italic">
+                    {t.userPage.form.cluePhotoHint}
+                  </p>
+                )}
+              </div>
 
               <div className="flex justify-end gap-3 pt-4">
                 <button
@@ -525,17 +692,113 @@ export default function UserPage({ params }: PageProps) {
                 </button>
                 <button
                   type="button"
-                  onClick={handleGoToPreview}
+                  onClick={handleNextToNote}
                   disabled={compressingField !== null}
                   className="px-6 py-2.5 bg-[#8b0000] text-[#f4e4bc] font-cinzel font-bold rounded shadow hover:bg-[#a50000] disabled:opacity-50 transition-colors"
                 >
-                  {t.userPage.form.previewButton}
+                  {t.userPage.form.nextToNote}
                 </button>
               </div>
             </div>
           </motion.div>
         )}
 
+        {/* STEP 2: CLASSIC LETTER / NOTE SCREEN (SEPARATE FROM CLUES) */}
+        {viewState === "note" && (
+          <motion.div
+            key="note"
+            initial={{ scale: 0.92, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="z-20 w-full max-w-lg my-8"
+          >
+            <div className="bg-[#f4e4bc] p-8 rounded-sm shadow-2xl relative overflow-hidden transform rotate-1 min-h-[420px] space-y-5">
+              <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(#8b7355_1px,transparent_1px)] [background-size:16px_16px]" />
+
+              <div className="relative z-10 flex justify-between items-center border-b border-[#8b7355]/30 pb-2">
+                <span className="text-[#8b7355] font-cinzel text-sm font-bold tracking-widest">
+                  {t.userPage.noteStep.title}
+                </span>
+                <PenLine className="w-5 h-5 text-[#8b7355]" />
+              </div>
+
+              <p className="relative z-10 font-merriweather text-xs text-[#5d4037] italic">
+                {t.userPage.noteStep.subtitle}
+              </p>
+
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                maxLength={2000}
+                placeholder={t.userPage.noteStep.placeholder}
+                className="w-full h-56 bg-transparent resize-none outline-none text-[#5d4037] font-hand text-lg leading-relaxed placeholder-[#8b7355]/50 relative z-10"
+                autoFocus
+              />
+
+              <div className="relative z-10 pt-2 border-t border-[#8b7355]/20">
+                <p className="font-cinzel text-xs text-[#5d4037] mb-2">
+                  {t.userPage.noteStep.photoLabel}
+                </p>
+                {notePhotoPreview ? (
+                  <div className="relative inline-block">
+                    <img
+                      src={notePhotoPreview}
+                      alt="Note preview"
+                      className="h-24 w-24 object-cover rounded border-2 border-[#3e2723]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => clearPhoto("note")}
+                      className="absolute -top-2 -right-2 bg-[#8b0000] text-white rounded-full p-1 shadow"
+                      aria-label={t.userPage.noteStep.removePhoto}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="inline-flex items-center gap-2 px-3 py-2 bg-[#e6d5aa] border border-[#8b7355] rounded cursor-pointer text-xs font-cinzel text-[#3e2723] hover:bg-[#d9c594]">
+                    <Camera size={14} />
+                    <span>
+                      {compressingField === "note"
+                        ? t.userPage.form.compressing
+                        : t.userPage.noteStep.selectPhoto}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={compressingField !== null}
+                      onChange={(e) => handlePhotoSelect("note", e.target.files?.[0])}
+                    />
+                  </label>
+                )}
+              </div>
+
+              <div className="relative z-20 flex flex-wrap items-center justify-between gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setViewState("clues")}
+                  className="px-3 py-2 text-[#8b7355] font-cinzel text-xs hover:text-[#3e2723]"
+                >
+                  ← {t.userPage.noteStep.backToClues}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={compressingField !== null}
+                  onClick={() => setViewState("preview")}
+                  className="px-6 py-2.5 bg-[#8b0000] text-[#f4e4bc] font-cinzel font-bold text-sm rounded shadow hover:bg-[#a50000] disabled:opacity-50"
+                >
+                  {note.trim() || notePhoto
+                    ? t.userPage.noteStep.previewButton
+                    : t.userPage.noteStep.skipToPreview}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* STEP 3: PREVIEW */}
         {viewState === "preview" && (
           <motion.div
             key="preview"
@@ -553,7 +816,11 @@ export default function UserPage({ params }: PageProps) {
                 <strong>{authorName.trim()}</strong>
               </p>
               <p className="italic">"{clueText.trim()}"</p>
-              {clueExtra.trim() && <p className="text-xs text-[#5d4037]">+ {clueExtra.trim()}</p>}
+              {cleanedExtras.map((extra, idx) => (
+                <p key={idx} className="text-xs text-[#5d4037]">
+                  + {extra}
+                </p>
+              ))}
               {cluePhotoPreview && (
                 <img
                   src={cluePhotoPreview}
@@ -563,7 +830,7 @@ export default function UserPage({ params }: PageProps) {
               )}
               {note.trim() && (
                 <div className="pt-2 border-t border-[#8b7355]/30">
-                  <p className="font-hand text-base">{note.trim()}</p>
+                  <p className="font-hand text-base whitespace-pre-wrap">{note.trim()}</p>
                 </div>
               )}
               {notePhotoPreview && (
@@ -575,17 +842,12 @@ export default function UserPage({ params }: PageProps) {
               )}
             </div>
 
-            <div className="flex items-start gap-2 bg-[#8b0000]/10 border border-[#8b0000]/30 rounded p-3 text-xs text-[#8b0000] font-merriweather">
-              <AlertTriangle size={16} className="shrink-0 mt-0.5" />
-              <span>{t.userPage.preview.immutableWarning}</span>
-            </div>
-
-            <div className="flex gap-3">
+            <div className="flex items-stretch gap-3">
               <button
                 type="button"
                 disabled={submitting}
-                onClick={() => setViewState("writing")}
-                className="flex-1 py-3 bg-[#e6d5aa] text-[#3e2723] font-cinzel font-bold rounded border border-[#8b7355] hover:bg-[#d9c594]"
+                onClick={() => setViewState("clues")}
+                className="flex-1 min-h-[48px] py-3 bg-[#e6d5aa] text-[#3e2723] font-cinzel font-bold rounded border border-[#8b7355] hover:bg-[#d9c594] flex items-center justify-center"
               >
                 {t.userPage.preview.backToEdit}
               </button>
@@ -593,7 +855,7 @@ export default function UserPage({ params }: PageProps) {
                 type="button"
                 disabled={submitting}
                 onClick={handleConfirmSend}
-                className="flex-1 py-3 bg-[#8b0000] text-[#f4e4bc] font-cinzel font-bold rounded shadow hover:bg-[#a50000] disabled:opacity-60"
+                className="flex-1 min-h-[48px] py-3 bg-[#8b0000] text-[#f4e4bc] font-cinzel font-bold rounded shadow hover:bg-[#a50000] disabled:opacity-60 flex items-center justify-center"
               >
                 {submitting ? t.userPage.preview.sending : t.userPage.preview.sealAndSend}
               </button>

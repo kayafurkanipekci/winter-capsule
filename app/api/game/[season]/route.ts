@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/server/auth";
 import { getServerSupabase } from "@/lib/server/supabase";
-import { createSignedPhotoUrl, type ClueType } from "@/lib/server/game";
+import { createSignedPhotoUrl, parseExtraClues, type ClueType } from "@/lib/server/game";
 
 export const runtime = "nodejs";
 
@@ -75,13 +75,16 @@ export async function GET(
 
     const clueOrder = nextCard.clue_order as ClueType[];
     const visibleTypes = clueOrder.slice(0, nextCard.revealed_count);
+    const extraClues = parseExtraClues(nextEntry.clue_extra);
 
     const revealedClues: Array<{ type: ClueType; value: string }> = [];
     for (const clueType of visibleTypes) {
       if (clueType === "text") {
         revealedClues.push({ type: "text", value: nextEntry.clue_text });
-      } else if (clueType === "extra" && nextEntry.clue_extra) {
-        revealedClues.push({ type: "extra", value: nextEntry.clue_extra });
+      } else if (clueType === "extra" && extraClues[0]) {
+        revealedClues.push({ type: "extra", value: extraClues[0] });
+      } else if (clueType === "extra2" && extraClues[1]) {
+        revealedClues.push({ type: "extra2", value: extraClues[1] });
       } else if (clueType === "photo" && nextEntry.clue_photo_path) {
         const signed = await createSignedPhotoUrl(nextEntry.clue_photo_path);
         if (signed) {

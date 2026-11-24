@@ -5,7 +5,7 @@ import SnowEffect from "@/components/SnowEffect";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Check, Share2, Info } from "lucide-react";
+import { Check, Copy, Info, Share2 } from "lucide-react";
 import ShareDrawer from "@/components/ShareDrawer";
 import CalendarReminder from "@/components/CalendarReminder";
 import WarningPopup from "@/components/WarningPopup";
@@ -14,10 +14,17 @@ import { useI18n } from "@/lib/i18n/context";
 export default function CreateBox() {
   const { t } = useI18n();
   const router = useRouter();
-  const [formData, setFormData] = useState({ fullName: "", username: "", pin: "" });
+  const [formData, setFormData] = useState({
+    fullName: "",
+    username: "",
+    pin: "",
+    showWrongGuess: false,
+  });
   const [loading, setLoading] = useState(false);
   const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
   const [createdUsername, setCreatedUsername] = useState("");
+  const [createdLink, setCreatedLink] = useState("");
+  const [copied, setCopied] = useState(false);
   const [showShareDrawer, setShowShareDrawer] = useState(false);
   const [warningMessage, setWarningMessage] = useState("");
 
@@ -42,6 +49,7 @@ export default function CreateBox() {
           fullName: formData.fullName,
           username: formData.username.trim(),
           pin: formData.pin,
+          showWrongGuess: formData.showWrongGuess,
         }),
       });
 
@@ -64,17 +72,33 @@ export default function CreateBox() {
       const finalUsername: string = data.user.username;
       const link = `${window.location.origin}/${finalUsername}`;
       setCreatedUsername(finalUsername);
+      setCreatedLink(link);
       setShowSuccessDrawer(true);
       setLoading(false);
 
-      navigator.clipboard.writeText(link).catch((err) => {
-        console.error("Copy failed:", err);
-      });
+      // Attempt auto-copy; browsers may block async clipboard writes without a fresh gesture
+      navigator.clipboard
+        .writeText(link)
+        .then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2500);
+        })
+        .catch(() => {
+          setCopied(false);
+        });
     } catch (err) {
       console.error("Create error:", err);
       setWarningMessage(t.create.errors.genericError);
       setLoading(false);
     }
+  };
+
+  const handleManualCopy = () => {
+    if (!createdLink) return;
+    navigator.clipboard.writeText(createdLink).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
   };
 
   const goToBox = () => {
@@ -138,6 +162,19 @@ export default function CreateBox() {
             />
           </div>
 
+          {/* Owner wrong-guess notification switch (default OFF) */}
+          <label className="flex items-center justify-between gap-3 pt-1 cursor-pointer select-none">
+            <span className="font-merriweather text-xs text-[#3e2723]">
+              {t.create.showWrongGuessLabel}
+            </span>
+            <input
+              type="checkbox"
+              checked={formData.showWrongGuess}
+              onChange={(e) => setFormData({ ...formData, showWrongGuess: e.target.checked })}
+              className="w-4 h-4 accent-[#8b0000] shrink-0"
+            />
+          </label>
+
           <button
             onClick={handleCreate}
             disabled={loading}
@@ -185,13 +222,20 @@ export default function CreateBox() {
                   {t.create.success.descriptionLine2}
                 </p>
 
-                <div className="bg-[#e6d5aa]/60 border border-[#8b7355]/30 rounded-lg p-3 text-left space-y-1.5 text-xs font-merriweather text-[#3e2723]">
-                  <p className="flex items-start gap-2">
-                    <Info size={14} className="shrink-0 mt-0.5 text-[#8b0000]" />
-                    <span>{t.create.success.rememberedNotice}</span>
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <Info size={14} className="shrink-0 mt-0.5 text-[#8b0000]" />
+                <div
+                  onClick={handleManualCopy}
+                  className="bg-[#e6d5aa]/70 border border-[#8b7355]/40 rounded-lg p-3 flex items-center justify-between gap-3 cursor-pointer active:scale-[0.99] transition-transform"
+                >
+                  <span className="font-mono text-xs text-[#3e2723] truncate">{createdLink}</span>
+                  <span className="inline-flex items-center gap-1 text-xs font-cinzel font-bold text-[#8b0000] shrink-0">
+                    {copied ? <Check size={16} /> : <Copy size={16} />}
+                    {copied ? t.create.success.copied : t.create.success.copyLink}
+                  </span>
+                </div>
+
+                <div className="bg-[#e6d5aa]/60 border border-[#8b7355]/30 rounded-lg p-3 text-left text-xs font-merriweather text-[#3e2723]">
+                  <p className="flex items-center gap-2">
+                    <Info size={14} className="shrink-0 text-[#8b0000]" />
                     <span>{t.create.success.minFourNotice}</span>
                   </p>
                 </div>

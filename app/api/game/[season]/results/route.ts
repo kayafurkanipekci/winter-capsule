@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/server/auth";
 import { getServerSupabase } from "@/lib/server/supabase";
-import { createSignedPhotoUrl } from "@/lib/server/game";
+import { createSignedPhotoUrl, parseExtraClues } from "@/lib/server/game";
 
 export const runtime = "nodejs";
 
@@ -46,15 +46,19 @@ export async function GET(
         .order("created_at", { ascending: true });
 
       const cards = await Promise.all(
-        (entries ?? []).map(async (entry) => ({
-          id: entry.id,
-          authorName: entry.author_name,
-          clueText: entry.clue_text,
-          clueExtra: entry.clue_extra,
-          cluePhotoUrl: await createSignedPhotoUrl(entry.clue_photo_path),
-          note: entry.note,
-          notePhotoUrl: await createSignedPhotoUrl(entry.note_photo_path),
-        }))
+        (entries ?? []).map(async (entry) => {
+          const extras = parseExtraClues(entry.clue_extra);
+          return {
+            id: entry.id,
+            authorName: entry.author_name,
+            clueText: entry.clue_text,
+            clueExtra: extras[0] ?? null,
+            clueExtraList: extras,
+            cluePhotoUrl: await createSignedPhotoUrl(entry.clue_photo_path),
+            note: entry.note,
+            notePhotoUrl: await createSignedPhotoUrl(entry.note_photo_path),
+          };
+        })
       );
 
       return NextResponse.json({
@@ -91,11 +95,13 @@ export async function GET(
               ? "correct"
               : "wrong";
 
+        const extras = parseExtraClues(entry?.clue_extra ?? null);
         return {
           id: c.id,
           authorName: entry?.author_name ?? "",
           clueText: entry?.clue_text ?? "",
-          clueExtra: entry?.clue_extra ?? null,
+          clueExtra: extras[0] ?? null,
+          clueExtraList: extras,
           cluePhotoUrl: await createSignedPhotoUrl(entry?.clue_photo_path ?? null),
           note: entry?.note ?? null,
           notePhotoUrl: await createSignedPhotoUrl(entry?.note_photo_path ?? null),

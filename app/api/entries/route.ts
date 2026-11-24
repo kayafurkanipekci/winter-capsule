@@ -40,9 +40,21 @@ export async function POST(request: Request) {
     const boxUsername = String(formData.get("boxUsername") ?? "").trim();
     const rawAuthorName = String(formData.get("authorName") ?? "");
     const clueText = String(formData.get("clueText") ?? "").trim();
-    const clueExtraRaw = String(formData.get("clueExtra") ?? "").trim();
+    const clueExtra1 = String(formData.get("clueExtra1") ?? formData.get("clueExtra") ?? "").trim();
+    const clueExtra2 = String(formData.get("clueExtra2") ?? "").trim();
     const noteRaw = String(formData.get("note") ?? "").trim();
-    const showWrongGuess = String(formData.get("showWrongGuess") ?? "false") === "true";
+
+    let clueExtraStored: string | null = null;
+    const extraTexts = [clueExtra1, clueExtra2].filter(Boolean);
+    if (extraTexts.length === 1) {
+      if (extraTexts[0].length > 200) {
+        return NextResponse.json({ error: "clue_extra_invalid" }, { status: 400 });
+      }
+      clueExtraStored = extraTexts[0];
+    } else if (extraTexts.length >= 2) {
+      const encoded = JSON.stringify([extraTexts[0].slice(0, 90), extraTexts[1].slice(0, 90)]);
+      clueExtraStored = encoded;
+    }
 
     if (!boxUsername) {
       return NextResponse.json({ error: "box_not_found" }, { status: 404 });
@@ -50,9 +62,6 @@ export async function POST(request: Request) {
 
     if (clueText.length < 3 || clueText.length > 300) {
       return NextResponse.json({ error: "clue_invalid" }, { status: 400 });
-    }
-    if (clueExtraRaw.length > 200) {
-      return NextResponse.json({ error: "clue_extra_invalid" }, { status: 400 });
     }
     if (noteRaw.length > 2000) {
       return NextResponse.json({ error: "note_invalid" }, { status: 400 });
@@ -197,11 +206,11 @@ export async function POST(request: Request) {
       author_name: authorName,
       author_name_norm: authorNameNorm,
       clue_text: clueText,
-      clue_extra: clueExtraRaw || null,
+      clue_extra: clueExtraStored,
       clue_photo_path: cluePhotoPath,
       note: noteRaw || null,
       note_photo_path: notePhotoPath,
-      show_wrong_guess: showWrongGuess,
+      show_wrong_guess: false,
     });
 
     if (insertErr) {

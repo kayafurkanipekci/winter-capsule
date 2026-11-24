@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Alice, Courgette } from "next/font/google"; // Alice for everything, Courgette for letters
+import { Lora, Courgette } from "next/font/google";
 import "./globals.css";
 
-const alice = Alice({
+const alice = Lora({
   subsets: ["latin", "latin-ext"],
   variable: "--font-alice",
-  weight: ["400"],
+  weight: ["400", "700"],
 });
 
 const courgette = Courgette({

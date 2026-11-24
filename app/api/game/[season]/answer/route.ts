@@ -57,11 +57,18 @@ export async function POST(
       return NextResponse.json({ error: "not_current_card" }, { status: 409 });
     }
 
+    const remainingBeforeThis = allCards.filter(
+      (c) => c.status === "pending" && c.id !== currentCard.id
+    ).length;
+
     let nextStatus: "guessed" | "passed";
     let guessedCardId: string | null = null;
     let points: number;
 
     if (action === "pass") {
+      if (remainingBeforeThis === 0) {
+        return NextResponse.json({ error: "pass_not_allowed_on_last_card" }, { status: 400 });
+      }
       nextStatus = "passed";
       points = calculateCardPoints("passed", currentCard.revealed_count, false);
     } else {

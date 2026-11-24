@@ -19,7 +19,7 @@ import {
 import { useI18n } from "@/lib/i18n/context";
 
 interface RevealedClue {
-  type: "text" | "extra" | "photo";
+  type: "text" | "extra" | "extra2" | "photo";
   value: string;
 }
 
@@ -43,6 +43,7 @@ interface ResultCard {
   authorName: string;
   clueText: string;
   clueExtra: string | null;
+  clueExtraList?: string[];
   cluePhotoUrl: string | null;
   note: string | null;
   notePhotoUrl: string | null;
@@ -428,14 +429,16 @@ export default function GamePage({ params }: PageProps) {
                 </AnimatePresence>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setPendingAction({ type: "pass" })}
-                className="w-full py-3 bg-[#8b7355]/20 hover:bg-[#8b7355]/30 text-[#5d4037] font-cinzel font-bold text-sm rounded border border-[#8b7355]/40 flex items-center justify-center gap-2 transition-colors"
-              >
-                <SkipForward size={16} />
-                {t.game.passButton}
-              </button>
+              {gameState.answeredCount + 1 < gameState.totalCount && (
+                <button
+                  type="button"
+                  onClick={() => setPendingAction({ type: "pass" })}
+                  className="w-full py-3 bg-[#8b7355]/20 hover:bg-[#8b7355]/30 text-[#5d4037] font-cinzel font-bold text-sm rounded border border-[#8b7355]/40 flex items-center justify-center gap-2 transition-colors"
+                >
+                  <SkipForward size={16} />
+                  {t.game.passButton}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -519,7 +522,9 @@ export default function GamePage({ params }: PageProps) {
                       {t.game.results.cluesLabel}
                     </p>
                     <p className="italic">"{card.clueText}"</p>
-                    {card.clueExtra && <p className="text-xs text-[#5d4037]">+ {card.clueExtra}</p>}
+                    {(card.clueExtraList ?? (card.clueExtra ? [card.clueExtra] : [])).map((extra, i) => (
+                      <p key={i} className="text-xs text-[#5d4037]">+ {extra}</p>
+                    ))}
                     {card.cluePhotoUrl && (
                       <img
                         src={card.cluePhotoUrl}
@@ -723,12 +728,12 @@ export default function GamePage({ params }: PageProps) {
                   ? t.game.confirmPass
                   : t.game.confirmGuess(pendingAction.fullName)}
               </p>
-              <div className="flex gap-3">
+              <div className="flex items-stretch gap-3">
                 <button
                   type="button"
                   disabled={submitting}
                   onClick={() => setPendingAction(null)}
-                  className="flex-1 py-2.5 bg-[#e6d5aa] text-[#3e2723] font-cinzel font-bold text-sm rounded border border-[#8b7355]"
+                  className="flex-1 min-h-[44px] py-2.5 bg-[#e6d5aa] text-[#3e2723] font-cinzel font-bold text-sm rounded border border-[#8b7355] flex items-center justify-center"
                 >
                   {t.game.confirmCancel}
                 </button>
@@ -736,7 +741,7 @@ export default function GamePage({ params }: PageProps) {
                   type="button"
                   disabled={submitting}
                   onClick={handleConfirmAction}
-                  className="flex-1 py-2.5 bg-[#8b0000] text-[#f4e4bc] font-cinzel font-bold text-sm rounded flex items-center justify-center gap-1.5"
+                  className="flex-1 min-h-[44px] py-2.5 bg-[#8b0000] text-[#f4e4bc] font-cinzel font-bold text-sm rounded flex items-center justify-center gap-1.5"
                 >
                   <Check size={16} />
                   {t.game.confirmOk}

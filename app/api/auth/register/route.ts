@@ -27,6 +27,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "pin_invalid" }, { status: 400 });
     }
 
+    const showWrongGuess = Boolean(body.showWrongGuess);
+
     const supabase = getServerSupabase();
 
     const { data: existing } = await supabase
@@ -39,21 +41,49 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "username_taken" }, { status: 409 });
     }
 
-    const { data: created, error: insertError } = await supabase
+    let created: { id: string; username: string; full_name: string } | null = null;
+    const { data: insertedWithFlag, error: insertError } = await supabase
       .from("users")
       .insert({
         username: usernameCheck.username,
         username_norm: usernameCheck.usernameNorm,
         pin,
         full_name: fullNameCheck.fullName,
+        show_wrong_guess: showWrongGuess,
       })
       .select("id, username, full_name")
       .single();
 
-    if (insertError || !created) {
-      if (insertError?.code === "23505") {
+    if (insertError) {
+      // Fallback if show_wrong_guess column has not been added to users yet
+      if (insertError.code === "42703" || insertError.message?.includes("show_wrong_guess")) {
+        const { data: fallbackCreated, error: fallbackErr } = await supabase
+          .from("users")
+          .insert({
+            username: usernameCheck.username,
+            username_norm: usernameCheck.usernameNorm,
+            pin,
+            full_name: fullNameCheck.fullName,
+          })
+          .select("id, username, full_name")
+          .single();
+        if (fallbackErr || !fallbackCreated) {
+          if (fallbackErr?.code === "23505") {
+            return NextResponse.json({ error: "username_taken" }, { status: 409 });
+          }
+          return NextResponse.json({ error: "server_error" }, { status: 500 });
+        }
+        created = fallbackCreated;
+      } else if (insertError.code === "23505") {
         return NextResponse.json({ error: "username_taken" }, { status: 409 });
+      } else {
+        return NextResponse.json({ error: "server_error" }, { status: 500 });
       }
+    } else {
+      created = insertedWithFlag;
+    }
+
+    if (!created) {
       return NextResponse.json({ error: "server_error" }, { status: 500 });
     }
 

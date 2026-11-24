@@ -19,13 +19,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "invalid_season" }, { status: 400 });
     }
 
-    if (!isSeasonUnlocked(season)) {
-      return NextResponse.json({ error: "season_locked" }, { status: 403 });
-    }
-
     const supabase = getServerSupabase();
 
-    // Idempotent check: return existing session if already opened
+    // Idempotent check: return existing session if already opened (including dev-opened sessions)
     const { data: existingSession } = await supabase
       .from("game_sessions")
       .select("id, mode, status")
@@ -38,6 +34,10 @@ export async function POST(request: Request) {
         mode: existingSession.mode,
         status: existingSession.status,
       });
+    }
+
+    if (!isSeasonUnlocked(season)) {
+      return NextResponse.json({ error: "season_locked" }, { status: 403 });
     }
 
     const { data: entries, error: entriesErr } = await supabase

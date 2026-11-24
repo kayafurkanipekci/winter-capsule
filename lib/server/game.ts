@@ -2,7 +2,22 @@ import "server-only";
 import crypto from "crypto";
 import { getPhotoBucket, getServerSupabase } from "./supabase";
 
-export type ClueType = "text" | "extra" | "photo";
+export type ClueType = "text" | "extra" | "extra2" | "photo";
+
+export function parseExtraClues(raw: string | null): string[] {
+  if (!raw) return [];
+  if (raw.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((x): x is string => typeof x === "string" && x.trim().length > 0);
+      }
+    } catch {
+      // Treat as plain text if not valid JSON
+    }
+  }
+  return [raw];
+}
 
 export function shuffleArray<T>(items: T[]): T[] {
   const arr = [...items];
@@ -19,7 +34,9 @@ export function buildClueOrder(entry: {
   clue_photo_path: string | null;
 }): ClueType[] {
   const available: ClueType[] = ["text"];
-  if (entry.clue_extra) available.push("extra");
+  const extras = parseExtraClues(entry.clue_extra);
+  if (extras.length >= 1) available.push("extra");
+  if (extras.length >= 2) available.push("extra2");
   if (entry.clue_photo_path) available.push("photo");
   return shuffleArray(available);
 }
