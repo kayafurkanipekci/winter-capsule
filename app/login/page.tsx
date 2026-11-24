@@ -7,8 +7,10 @@ import Link from "next/link";
 import SnowEffect from "@/components/SnowEffect";
 import { supabase } from "@/lib/supabase";
 import { Copy, Check, HelpCircle } from "lucide-react";
+import { useI18n } from "@/lib/i18n/context";
 
 export default function LoginPage() {
+    const { t } = useI18n();
     const router = useRouter();
     const [username, setUsername] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -60,22 +62,22 @@ export default function LoginPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="z-10 w-full max-w-md bg-[#f4e4bc] p-8 rounded shadow-2xl border-4 border-[#3e2723]"
             >
-                <h1 className="font-cinzel text-3xl text-[#3e2723] text-center font-bold mb-2">Giriş Yap</h1>
+                <h1 className="font-cinzel text-3xl text-[#3e2723] text-center font-bold mb-2">{t.login.title}</h1>
                 <p className="text-center font-merriweather text-[#5d4037] opacity-80 mb-6 italic text-sm">
-                    Posta kutusuna gitmek için kullanıcı adını gir.
+                    {t.login.subtitle}
                 </p>
 
                 <form onSubmit={handleLogin} className="space-y-6">
                     <div>
                         <label htmlFor="username" className="block font-cinzel text-[#3e2723] font-bold mb-2">
-                            Kullanıcı Adı
+                            {t.login.usernameLabel}
                         </label>
                         <input
                             id="username"
                             type="text"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            placeholder="örn: isminiz"
+                            placeholder={t.login.usernamePlaceholder}
                             className="w-full bg-[#e6d5aa]/50 border-b-2 border-[#8b7355] p-3 text-[#3e2723] text-lg font-merriweather outline-none focus:border-[#8b0000] placeholder-amber-900/30"
                             required
                         />
@@ -86,22 +88,22 @@ export default function LoginPage() {
                         disabled={isLoading}
                         className="w-full py-4 bg-[#3e2723] text-amber-100 font-cinzel font-bold text-lg rounded hover:bg-[#5d4037] transition-all shadow-lg active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                        {isLoading ? "KONTROL EDİLİYOR..." : "KUTUYA GİT"}
+                        {isLoading ? t.login.checking : t.login.submit}
                     </button>
                 </form>
 
                 <div className="mt-6 text-center pt-4 border-t border-[#8b7355]/20">
-                    <p className="text-[#5d4037] text-sm mb-2 font-merriweather">Henüz bir kutun yok mu?</p>
+                    <p className="text-[#5d4037] text-sm mb-2 font-merriweather">{t.login.noBoxYet}</p>
                     <Link
                         href="/create"
                         className="text-[#8b0000] font-bold hover:underline font-cinzel text-sm"
                     >
-                        Hemen Ücretsiz Oluştur
+                        {t.login.createFree}
                     </Link>
                 </div>
 
                 <div className="mt-4 text-center">
-                    <Link href="/" className="text-[#8b7355] text-xs hover:text-[#5d4037] font-cinzel">← Ana Sayfaya Dön</Link>
+                    <Link href="/" className="text-[#8b7355] text-xs hover:text-[#5d4037] font-cinzel">← {t.login.backHome}</Link>
                 </div>
 
             </motion.div>
@@ -123,11 +125,11 @@ export default function LoginPage() {
                             <div className="w-12 h-1 bg-[#8b7355]/30 rounded-full mx-auto mb-6"></div>
 
                             <div className="text-center space-y-4">
-                                <div className="text-4xl mb-2">🤔</div>
-                                <h3 className="font-cinzel text-xl text-[#3e2723] font-bold">Kullanıcı Bulunamadı</h3>
+                                <HelpCircle size={40} className="mx-auto mb-2 text-[#8b0000]" />
+                                <h3 className="font-cinzel text-xl text-[#3e2723] font-bold">{t.login.notFound.title}</h3>
                                 <p className="font-merriweather text-[#5d4037] text-sm">
-                                    "<strong>{username}</strong>" adında bir kutu bulamadık. <br />
-                                    Adını yanlış yazmış olabilir misin?
+                                    {t.login.notFound.description(username)} <br />
+                                    {t.login.notFound.wrongSpelling}
                                 </p>
 
                                 <div className="flex flex-col gap-3 mt-6">
@@ -136,7 +138,7 @@ export default function LoginPage() {
                                         href="/create"
                                         className="w-full py-3 bg-[#8b0000] text-white font-cinzel font-bold rounded shadow hover:bg-[#a50000] transition-colors"
                                     >
-                                        YENİ KUTU OLUŞTUR
+                                        {t.login.notFound.createNew}
                                     </Link>
 
                                     {/* Seçenek 2: Tekrar Dene */}
@@ -144,7 +146,7 @@ export default function LoginPage() {
                                         onClick={() => setShowErrorDrawer(false)}
                                         className="w-full py-3 bg-[#3e2723] text-[#f4e4bc] font-cinzel font-bold rounded hover:bg-[#5d4037] transition-colors"
                                     >
-                                        TEKRAR DENE
+                                        {t.login.notFound.tryAgain}
                                     </button>
                                 </div>
 
@@ -154,12 +156,12 @@ export default function LoginPage() {
                                         <div className="w-full border-t border-[#8b7355]/20"></div>
                                     </div>
                                     <div className="relative flex justify-center">
-                                        <span className="bg-[#f4e4bc] px-2 text-xs text-[#8b7355] font-cinzel">YARDIM</span>
+                                        <span className="bg-[#f4e4bc] px-2 text-xs text-[#8b7355] font-cinzel">{t.login.notFound.helpDivider}</span>
                                     </div>
                                 </div>
 
                                 <p className="font-merriweather text-[#5d4037] text-xs">
-                                    Kullanıcı adını unuttuysan bana yazabilirsin:
+                                    {t.login.notFound.forgotUsernamePrompt}
                                 </p>
 
                                 <div
@@ -175,7 +177,7 @@ export default function LoginPage() {
                                         {emailCopied ? <Check size={16} /> : <Copy size={16} />}
                                     </div>
                                 </div>
-                                {emailCopied && <p className="text-green-700 text-[10px] font-bold animate-pulse">Kopyalandı!</p>}
+                                {emailCopied && <p className="text-green-700 text-[10px] font-bold animate-pulse">{t.login.notFound.copied}</p>}
                             </div>
                         </motion.div>
                     </>

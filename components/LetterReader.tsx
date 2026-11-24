@@ -2,6 +2,8 @@
 
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import { X } from "lucide-react";
+import { useI18n } from "@/lib/i18n/context";
 
 interface LetterReaderProps {
   content: string;
@@ -9,6 +11,7 @@ interface LetterReaderProps {
 }
 
 export default function LetterReader({ content, onClose }: LetterReaderProps) {
+  const { t } = useI18n();
   const [currentDay, setCurrentDay] = useState("25");
 
   useEffect(() => {
@@ -32,10 +35,10 @@ export default function LetterReader({ content, onClose }: LetterReaderProps) {
         {/* Üst Kısım */}
         <div className="flex justify-between items-center mb-6 border-b border-[#8b7355]/30 pb-2">
           <span className="text-[#8b7355] font-cinzel text-sm font-bold tracking-widest">
-            GEÇMİŞTEN BİR MESAJ
+            {t.letterReader.header}
           </span>
-          <button onClick={onClose} className="text-[#8b0000] font-bold text-xl hover:scale-110 transition-transform">
-            ✕
+          <button onClick={onClose} className="text-[#8b0000] hover:scale-110 transition-transform">
+            <X size={20} />
           </button>
         </div>
 

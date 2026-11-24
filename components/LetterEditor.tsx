@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { PenLine } from "lucide-react";
+import { useI18n } from "@/lib/i18n/context";
 
 interface LetterEditorProps {
   onSeal: (message: string) => void;
@@ -10,6 +11,7 @@ interface LetterEditorProps {
 }
 
 export default function LetterEditor({ onSeal, onCancel }: LetterEditorProps) {
+  const { t } = useI18n();
   const [message, setMessage] = useState("");
   // Durumlar: 'writing' (yazıyor), 'folding' (katlanıyor), 'sealed' (mühürlendi), 'flying' (uçuyor)
   const [status, setStatus] = useState<"writing" | "folding" | "sealed" | "flying">("writing");
@@ -59,7 +61,7 @@ export default function LetterEditor({ onSeal, onCancel }: LetterEditorProps) {
 
             <div className="flex justify-between items-center mb-6 border-b border-[#8b7355]/30 pb-2">
               <span className="text-[#8b7355] font-cinzel text-sm font-bold tracking-widest">
-                ANONİM MEKTUP
+                {t.letterEditor.header}
               </span>
               <PenLine className="w-5 h-5 text-[#8b7355]" />
             </div>
@@ -67,7 +69,7 @@ export default function LetterEditor({ onSeal, onCancel }: LetterEditorProps) {
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Geleceğe bir not bırak..."
+              placeholder={t.letterEditor.placeholder}
               className="w-full h-64 bg-transparent resize-none outline-none text-[#5d4037] font-hand text-lg leading-relaxed placeholder-[#8b7355]/50 relative z-10"
               autoFocus
             />
@@ -77,14 +79,14 @@ export default function LetterEditor({ onSeal, onCancel }: LetterEditorProps) {
                 onClick={onCancel}
                 className="px-4 py-2 text-[#8b7355] font-cinzel text-sm hover:text-[#5d4037]"
               >
-                Vazgeç
+                {t.letterEditor.cancel}
               </button>
               <button
                 onClick={handleSealClick}
                 disabled={!message.trim()}
                 className="px-6 py-2 bg-[#8b0000] text-[#f4e4bc] font-cinzel font-bold rounded shadow hover:bg-[#a50000] disabled:opacity-50 transition-colors"
               >
-                MÜHÜRLE
+                {t.letterEditor.seal}
               </button>
             </div>
           </div>

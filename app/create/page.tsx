@@ -11,8 +11,10 @@ import ShareDrawer from "@/components/ShareDrawer";
 import CalendarReminder from "@/components/CalendarReminder";
 
 import WarningPopup from "@/components/WarningPopup";
+import { useI18n } from "@/lib/i18n/context";
 
 export default function CreateBox() {
+  const { t } = useI18n();
   const router = useRouter();
   const [formData, setFormData] = useState({ username: "", pin: "" });
   const [loading, setLoading] = useState(false);
@@ -25,7 +27,7 @@ export default function CreateBox() {
   const handleCreate = async () => {
     // Basit kontroller
     if (!formData.username || formData.pin.length < 4) {
-      alert("Lütfen geçerli bir isim ve 4 haneli şifre gir.");
+      alert(t.create.errors.invalidInput);
       return;
     }
 
@@ -48,9 +50,9 @@ export default function CreateBox() {
 
       if (error) {
         if (error.code === "23505") {
-          alert("Bu isim zaten alınmış! Başka bir tane dene.");
+          alert(t.create.errors.usernameTaken);
         } else {
-          alert("Bir hata oluştu.");
+          alert(t.create.errors.genericError);
           console.error(error);
         }
         setLoading(false);
@@ -104,20 +106,20 @@ export default function CreateBox() {
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#8b0000] to-transparent opacity-50"></div>
 
         <h1 className="font-cinzel text-3xl text-[#3e2723] text-center mb-2 font-bold">
-          Posta Kutusu Aç
+          {t.create.title}
         </h1>
         <p className="text-center font-merriweather text-[#5d4037] text-sm mb-8 italic">
-          Kendi adına özel, şifreli bir kutu oluştur.
+          {t.create.subtitle}
         </p>
 
         <div className="space-y-6">
 
           {/* Kullanıcı Adı */}
           <div>
-            <label className="block font-cinzel text-[#3e2723] text-sm mb-1">Kullanıcı Adı (Linkin olacak)</label>
+            <label className="block font-cinzel text-[#3e2723] text-sm mb-1">{t.create.usernameLabel}</label>
             <input
               type="text"
-              placeholder="örn: isminiz"
+              placeholder={t.create.usernamePlaceholder}
               className="w-full bg-[#e6d5aa]/50 border-b-2 border-[#8b7355] p-2 outline-none text-[#3e2723] font-merriweather focus:border-[#8b0000] transition-colors placeholder-[#8b7355]/50"
               value={formData.username}
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
@@ -126,7 +128,7 @@ export default function CreateBox() {
 
           {/* Şifre (PIN) */}
           <div>
-            <label className="block font-cinzel text-[#3e2723] text-sm mb-1">4 Haneli Gizli Şifren</label>
+            <label className="block font-cinzel text-[#3e2723] text-sm mb-1">{t.create.pinLabel}</label>
             <input
               type="text"
               maxLength={4}
@@ -143,13 +145,13 @@ export default function CreateBox() {
             disabled={loading}
             className="w-full py-3 bg-[#3e2723] text-[#f4e4bc] font-cinzel font-bold tracking-wider rounded shadow hover:bg-[#5d4037] disabled:opacity-50 transition-all mt-4"
           >
-            {loading ? "Mühürleniyor..." : "KUTUYU OLUŞTUR"}
+            {loading ? t.create.creating : t.create.createButton}
           </button>
 
         </div>
 
         <div className="mt-4 text-center">
-          <Link href="/" className="text-[#8b7355] text-xs hover:text-[#5d4037] font-cinzel">← Ana Sayfaya Dön</Link>
+          <Link href="/" className="text-[#8b7355] text-xs hover:text-[#5d4037] font-cinzel">← {t.create.backHome}</Link>
         </div>
 
       </motion.div>
@@ -182,10 +184,10 @@ export default function CreateBox() {
                   <Check size={32} />
                 </div>
 
-                <h2 className="font-cinzel text-2xl text-[#3e2723] font-bold">Kutun Hazır!</h2>
+                <h2 className="font-cinzel text-2xl text-[#3e2723] font-bold">{t.create.success.title}</h2>
                 <p className="font-merriweather text-[#5d4037]">
-                  Linkin oluşturuldu ve otomatik olarak kopyalandı.<br />
-                  Arkadaşlarına gönderip mesajları toplamaya başla.
+                  {t.create.success.descriptionLine1}<br />
+                  {t.create.success.descriptionLine2}
                 </p>
 
                 <div className="flex flex-col gap-3">
@@ -195,14 +197,14 @@ export default function CreateBox() {
                     className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-cinzel font-bold rounded shadow-lg hover:scale-[1.02] transition-transform flex items-center justify-center gap-2"
                   >
                     <Share2 size={20} />
-                    PAYLAŞ & DAVET ET
+                    {t.create.success.shareInvite}
                   </button>
 
                   <button
                     onClick={goToBox}
                     className="w-full py-3 bg-[#3e2723] text-[#f4e4bc] font-cinzel font-bold rounded shadow hover:bg-[#5d4037] transition-all"
                   >
-                    KUTUMA GİT
+                    {t.create.success.goToBox}
                   </button>
 
                   {/* TAKVİM HATIRLATICI */}
@@ -226,8 +228,8 @@ export default function CreateBox() {
       <WarningPopup
         isOpen={showWarning}
         onClose={() => setShowWarning(false)}
-        title="Uyarı"
-        message="Kullanıcı adı boşluk içeremez! Lütfen ismini bitişik yaz."
+        title={t.create.warningTitle}
+        message={t.create.warningNoSpaces}
       />
     </main>
   );

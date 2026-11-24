@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, X } from "lucide-react";
+import { useI18n } from "@/lib/i18n/context";
 
 interface WarningPopupProps {
     isOpen: boolean;
@@ -11,6 +12,7 @@ interface WarningPopupProps {
 }
 
 export default function WarningPopup({ isOpen, onClose, title, message }: WarningPopupProps) {
+    const { t } = useI18n();
     return (
         <AnimatePresence>
             {isOpen && (
@@ -63,7 +65,7 @@ export default function WarningPopup({ isOpen, onClose, title, message }: Warnin
                                     onClick={onClose}
                                     className="w-full py-2 bg-[#3e2723] text-[#f4e4bc] font-cinzel font-bold rounded hover:bg-[#5d4037] transition-colors"
                                 >
-                                    ANLAŞILDI
+                                    {t.warningPopup.confirmButton}
                                 </button>
                             </div>
 

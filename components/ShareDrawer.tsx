@@ -3,7 +3,9 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toPng } from "html-to-image";
-import { Download, Share2, Copy, Check, X, Instagram } from "lucide-react";
+import { Download, Share2, Copy, Check, X, Instagram, Link2 } from "lucide-react";
+import { getTargetYear } from "@/lib/capsuleTime";
+import { useI18n } from "@/lib/i18n/context";
 
 interface ShareDrawerProps {
     isOpen: boolean;
@@ -12,6 +14,7 @@ interface ShareDrawerProps {
 }
 
 export default function ShareDrawer({ isOpen, onClose, username }: ShareDrawerProps) {
+    const { t } = useI18n();
     const [isGenerating, setIsGenerating] = useState(false);
     const [copied, setCopied] = useState(false);
     const [shareUrl, setShareUrl] = useState("");
@@ -23,7 +26,7 @@ export default function ShareDrawer({ isOpen, onClose, username }: ShareDrawerPr
         }
     }, [username]);
 
-    const shareText = `Yeni yıl için bana anonim bir mesaj bırak!`;
+    const shareText = t.shareDrawer.shareText;
 
     const handleCopy = () => {
         navigator.clipboard.writeText(shareUrl);
@@ -45,7 +48,7 @@ export default function ShareDrawer({ isOpen, onClose, username }: ShareDrawerPr
                 // 3. Native Share dene
                 if (navigator.share) {
                     await navigator.share({
-                        title: 'Yılbaşı Kapsülü',
+                        title: t.shareDrawer.shareTitle,
                         text: shareText,
                         url: shareUrl,
                         files: [file]
@@ -53,7 +56,7 @@ export default function ShareDrawer({ isOpen, onClose, username }: ShareDrawerPr
                 } else {
                     // Desteklemiyorsa (Desktop) indir
                     const link = document.createElement('a');
-                    link.download = 'yilbasi-kapsulu-hikaye.png';
+                    link.download = t.shareDrawer.downloadFilename;
                     link.href = dataUrl;
                     link.click();
                 }
@@ -62,9 +65,9 @@ export default function ShareDrawer({ isOpen, onClose, username }: ShareDrawerPr
             console.error("Paylaşım hatası:", err);
             // Hata olursa düz link paylaşmayı dene
             if (navigator.share) {
-                navigator.share({ title: 'Yılbaşı Kapsülü', text: shareText, url: shareUrl });
+                navigator.share({ title: t.shareDrawer.shareTitle, text: shareText, url: shareUrl });
             } else {
-                alert("Görsel oluşturulamadı, link kopyalandı.");
+                alert(t.shareDrawer.imageErrorAlert);
                 handleCopy();
             }
         } finally {
@@ -103,7 +106,7 @@ export default function ShareDrawer({ isOpen, onClose, username }: ShareDrawerPr
                     >
                         {/* Header */}
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="font-cinzel text-xl text-[#3e2723] font-bold">Paylaş</h3>
+                            <h3 className="font-cinzel text-xl text-[#3e2723] font-bold">{t.shareDrawer.title}</h3>
                             <button onClick={onClose} className="p-2 hover:bg-[#8b7355]/20 rounded-full text-[#5d4037]">
                                 <X size={20} />
                             </button>
@@ -121,8 +124,8 @@ export default function ShareDrawer({ isOpen, onClose, username }: ShareDrawerPr
                                         <Instagram size={24} />
                                     </div>
                                     <div className="text-left">
-                                        <p className="font-bold font-cinzel text-sm">Hikaye İçin Görseli İndir</p>
-                                        <p className="text-[10px] opacity-90">Instagram, Snapchat, WhatsApp</p>
+                                        <p className="font-bold font-cinzel text-sm">{t.shareDrawer.downloadStory}</p>
+                                        <p className="text-[10px] opacity-90">{t.shareDrawer.storyPlatforms}</p>
                                     </div>
                                 </div>
                                 {isGenerating ? <div className="animate-spin text-white"></div> : <Download size={20} />}
@@ -152,7 +155,7 @@ export default function ShareDrawer({ isOpen, onClose, username }: ShareDrawerPr
                             className="bg-[#e6d5aa]/50 p-4 rounded-lg border border-[#8b7355]/30 flex items-center justify-between cursor-pointer active:scale-95 transition-transform"
                         >
                             <div className="flex flex-col overflow-hidden mr-4">
-                                <span className="text-[10px] text-[#8b7355] font-bold mb-1">KUTU LİNKİ</span>
+                                <span className="text-[10px] text-[#8b7355] font-bold mb-1">{t.shareDrawer.boxLinkLabel}</span>
                                 <span className="font-mono text-[#3e2723] text-sm truncate">
                                     {shareUrl}
                                 </span>
@@ -188,11 +191,11 @@ export default function ShareDrawer({ isOpen, onClose, username }: ShareDrawerPr
                                 ))}
 
                                 <div className="z-10 bg-[#f4e4bc] p-16 rounded-3xl shadow-[0_0_100px_rgba(251,191,36,0.3)] border-[8px] border-[#3e2723] text-center max-w-[800px]">
-                                    <h1 className="text-6xl text-[#3e2723] font-bold mb-8 font-serif">Zaman Kapsülü</h1>
+                                    <h1 className="text-6xl text-[#3e2723] font-bold mb-8 font-serif">{t.shareDrawer.storyTitle}</h1>
                                     <div className="w-full h-2 bg-[#8b0000] rounded-full mb-12 opacity-50"></div>
 
-                                    <p className="text-4xl text-[#5d4037] mb-8 italic">
-                                        "Bana 2026'da okumam için<br />bir mesaj bırak!"
+                                    <p suppressHydrationWarning className="text-4xl text-[#5d4037] mb-8 italic">
+                                        {t.shareDrawer.storyPromptLine1(getTargetYear())}<br />{t.shareDrawer.storyPromptLine2}
                                     </p>
 
                                     <div className="bg-[#3e2723] text-[#f4e4bc] text-5xl py-8 px-12 rounded-xl inline-block font-bold mb-12 border-2 border-[#8b7355]">
@@ -200,12 +203,15 @@ export default function ShareDrawer({ isOpen, onClose, username }: ShareDrawerPr
                                     </div>
 
                                     <p className="text-3xl text-[#8b7355] font-bold tracking-widest uppercase">
-                                        GİZLİ & ANONİM
+                                        {t.shareDrawer.storyBadge}
                                     </p>
                                 </div>
 
                                 <div className="absolute bottom-32 text-center">
-                                    <p className="text-amber-100/50 text-3xl font-serif">Link Profilimde 🔗</p>
+                                    <p className="text-amber-100/50 text-3xl font-serif flex items-center justify-center gap-3">
+                                        <span>{t.shareDrawer.storyFooter}</span>
+                                        <Link2 size={28} />
+                                    </p>
                                 </div>
                             </div>
                         </div>

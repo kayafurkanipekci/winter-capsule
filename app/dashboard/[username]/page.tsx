@@ -7,12 +7,12 @@ import Link from "next/link";
 import SnowEffect from "@/components/SnowEffect";
 import LetterReader from "@/components/LetterReader";
 import Mailbox from "@/components/Mailbox";
-import { Copy, Check, HelpCircle, Share2 } from "lucide-react";
+import { Copy, Check, HelpCircle, Share2, Bell, Mail } from "lucide-react";
 import ShareDrawer from "@/components/ShareDrawer";
+import { getTargetDate } from "@/lib/capsuleTime";
+import { useI18n } from "@/lib/i18n/context";
 
-// TEST İÇİN TARİHİ GEÇMİŞ BİR TARİH YAP (Örn: "2023-01-01")
-// GERÇEK TARİH: "2026-01-01T00:00:00"
-const TARGET_DATE = new Date("2026-01-01T00:00:00").getTime();
+const TARGET_DATE = getTargetDate().getTime();
 
 interface Message {
   id: string;
@@ -27,6 +27,7 @@ interface PageProps {
 }
 
 export default function PersonalDashboard({ params }: PageProps) {
+  const { t } = useI18n();
   const resolvedParams = use(params);
   const username = decodeURIComponent(resolvedParams.username);
 
@@ -58,23 +59,29 @@ export default function PersonalDashboard({ params }: PageProps) {
 
   // --- 1. SAYAÇ ---
   useEffect(() => {
-    const timer = setInterval(() => {
+    const updateCountdown = () => {
       const now = new Date().getTime();
       const distance = TARGET_DATE - now;
 
       if (distance < 0) {
         setIsTimeUp(true);
-        setTimeLeft("Mühürler Kırıldı!");
-        clearInterval(timer);
+        setTimeLeft(t.dashboard.sealsBroken);
+        return true;
       } else {
         const days = Math.floor(distance / (1000 * 60 * 60 * 24));
         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         setIsTimeUp(false);
-        setTimeLeft(`${days} gün ${hours} saat`);
+        setTimeLeft(t.dashboard.countdown(days, hours));
+        return false;
       }
+    };
+
+    if (updateCountdown()) return;
+    const timer = setInterval(() => {
+      if (updateCountdown()) clearInterval(timer);
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [t]);
 
   // --- 2. GİRİŞ VE VERİ ÇEKME ---
 
@@ -86,7 +93,7 @@ export default function PersonalDashboard({ params }: PageProps) {
         .from("users").select("pin").eq("username", username).single();
 
       if (userError || !user) {
-        setError("Kutu bulunamadı!");
+        setError(t.dashboard.boxNotFound);
         setLoading(false);
         return false;
       } else if (user.pin === pin) {
@@ -117,7 +124,7 @@ export default function PersonalDashboard({ params }: PageProps) {
 
   const handleManualLogin = async () => {
     if (pinInput.length < 4) {
-      setError("Lütfen 4 haneli şifreni gir.");
+      setError(t.dashboard.enterPinError);
       return;
     }
 
@@ -127,9 +134,9 @@ export default function PersonalDashboard({ params }: PageProps) {
       .from("users").select("pin").eq("username", username).single();
 
     if (userError || !user) {
-      setError("Kutu bulunamadı!");
+      setError(t.dashboard.boxNotFound);
     } else if (user.pin !== pinInput) {
-      setError("Yanlış şifre!");
+      setError(t.dashboard.wrongPin);
       setPinInput(""); // İsteğe bağlı, şifreyi temizle
     } else {
       // Doğruysa zaten useEffect yakalar veya burası da yapabilir
@@ -157,16 +164,16 @@ export default function PersonalDashboard({ params }: PageProps) {
   // --- 3. KUTUYA TIKLAMA (Sıradaki Mektubu Getir) ---
   const handleMailboxClick = () => {
     if (!isTimeUp) {
-      showNotification(`Kutu kilitli! ${timeLeft} sonra açılacak.`);
+      showNotification(t.dashboard.lockedToast(timeLeft));
       return;
     }
 
     // Eğer okunacak mektup kalmadıysa
     if (unreadCount === 0) {
       if (messages.length > 0) {
-        showNotification("Tüm mektuplar okundu! Aşağıdan hepsine bakabilirsin.");
+        showNotification(t.dashboard.allReadToast);
       } else {
-        showNotification("Posta kutun bomboş 😔");
+        showNotification(t.dashboard.emptyBoxToast);
       }
       return;
     }
@@ -244,7 +251,7 @@ export default function PersonalDashboard({ params }: PageProps) {
             onClick={handleManualLogin}
             className="w-full py-3 bg-[#3e2723] text-[#f4e4bc] font-cinzel font-bold rounded hover:bg-[#5d4037] transition-all"
           >
-            {loading ? "GİRİLİYOR..." : "GİRİŞ YAP"}
+            {loading ? t.dashboard.loggingIn : t.dashboard.loginButton}
           </button>
 
           <button
@@ -252,7 +259,7 @@ export default function PersonalDashboard({ params }: PageProps) {
             className="mt-4 text-[#8b7355] text-xs font-merriweather hover:text-[#5d4037] flex items-center justify-center gap-1 w-full"
           >
             <HelpCircle size={12} />
-            Şifremi Unuttum
+            {t.dashboard.forgotPin}
           </button>
         </motion.div>
 
@@ -271,9 +278,9 @@ export default function PersonalDashboard({ params }: PageProps) {
                 className="fixed bottom-0 left-0 right-0 z-50 bg-[#f4e4bc] rounded-t-3xl p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] border-t-4 border-[#8b0000]"
               >
                 <div className="w-12 h-1 bg-[#8b7355]/30 rounded-full mx-auto mb-6"></div>
-                <h3 className="font-cinzel text-xl text-[#3e2723] font-bold text-center mb-2">Şifreni mi unuttun?</h3>
+                <h3 className="font-cinzel text-xl text-[#3e2723] font-bold text-center mb-2">{t.dashboard.forgotDrawer.title}</h3>
                 <p className="font-merriweather text-[#5d4037] text-center text-sm mb-6">
-                  Kutunu açman için sana yardımcı olabilirim. Aşağıdaki adrese mail atman yeterli.
+                  {t.dashboard.forgotDrawer.description}
                 </p>
 
                 <div
@@ -289,7 +296,7 @@ export default function PersonalDashboard({ params }: PageProps) {
                     {emailCopied ? <Check size={20} /> : <Copy size={20} />}
                   </div>
                 </div>
-                {emailCopied && <p className="text-green-700 text-xs text-center mt-2 font-bold">Kopyalandı!</p>}
+                {emailCopied && <p className="text-green-700 text-xs text-center mt-2 font-bold">{t.dashboard.forgotDrawer.copied}</p>}
               </motion.div>
             </>
           )}
@@ -315,9 +322,9 @@ export default function PersonalDashboard({ params }: PageProps) {
       </AnimatePresence>
 
       <div className="absolute top-6 left-6 z-50 flex gap-4">
-        <Link href="/" className="text-[#3e2723] dark:text-amber-500/50 hover:text-[#5d4037] dark:hover:text-amber-400 font-cinzel text-sm transition-colors">← Çıkış</Link>
+        <Link href="/" className="text-[#3e2723] dark:text-amber-500/50 hover:text-[#5d4037] dark:hover:text-amber-400 font-cinzel text-sm transition-colors">← {t.dashboard.backExit}</Link>
         <button onClick={() => setShowShareDrawer(true)} className="text-[#3e2723] dark:text-amber-200/80 hover:text-[#5d4037] dark:hover:text-white font-cinzel text-sm border-b border-dashed border-[#3e2723] dark:border-amber-500/30 transition-colors flex items-center gap-1">
-          <Share2 size={14} /> Paylaş
+          <Share2 size={14} /> {t.dashboard.shareButton}
         </button>
       </div>
 
@@ -327,7 +334,7 @@ export default function PersonalDashboard({ params }: PageProps) {
         <div className="text-center">
           <div className="inline-block bg-[#f4e4bc] dark:bg-black/40 px-6 py-2 rounded-full border border-[#3e2723] dark:border-amber-500/30 backdrop-blur-md mb-4 shadow-md dark:shadow-none">
             <p className="font-cinzel text-[#3e2723] dark:text-amber-100 text-lg">
-              {isTimeUp ? "Mühürler Açıldı" : ` ${timeLeft}`}
+              {isTimeUp ? t.dashboard.sealsOpened : ` ${timeLeft}`}
             </p>
           </div>
 
@@ -342,13 +349,13 @@ export default function PersonalDashboard({ params }: PageProps) {
                 onClick={() => setViewMode("mailbox")}
                 className={`px-4 py-2 rounded font-cinzel text-sm transition-colors ${viewMode === 'mailbox' ? 'bg-amber-600 text-white' : 'bg-amber-900/40 text-amber-200 hover:bg-amber-800'}`}
               >
-                Posta Kutusu
+                {t.dashboard.viewMailbox}
               </button>
               <button
                 onClick={() => setViewMode("grid")}
                 className={`px-4 py-2 rounded font-cinzel text-sm transition-colors ${viewMode === 'grid' ? 'bg-amber-600 text-white' : 'bg-amber-900/40 text-amber-200 hover:bg-amber-800'}`}
               >
-                Tüm Mektuplar
+                {t.dashboard.viewGrid}
               </button>
             </motion.div>
           )}
@@ -368,14 +375,14 @@ export default function PersonalDashboard({ params }: PageProps) {
             <div className="text-center space-y-2">
               <p className="font-merriweather text-[#5d4037] dark:text-amber-100/40 text-sm max-w-xs italic">
                 {isTimeUp
-                  ? (unreadCount > 0 ? "Kutuya tıkla, mektupları sırayla oku." : "Tüm mektupları bitirdin!")
-                  : "Mektuplar burada güvenle saklanıyor."}
+                  ? (unreadCount > 0 ? t.dashboard.hintUnlockedUnread : t.dashboard.hintUnlockedAllRead)
+                  : t.dashboard.hintLocked}
               </p>
 
               {/* Kalan mesaj bilgisi */}
               {isTimeUp && unreadCount > 0 && (
                 <p className="text-[#8b0000] dark:text-amber-500 font-bold text-xs animate-pulse">
-                  {unreadCount} okunmamış mektubun var
+                  {t.dashboard.unreadCount(unreadCount)}
                 </p>
               )}
             </div>
@@ -406,9 +413,9 @@ export default function PersonalDashboard({ params }: PageProps) {
                 </p>
 
                 <div className="flex justify-between items-end mt-2">
-                  <span className="text-[10px] text-[#8b7355] font-bold">ANONİM</span>
+                  <span className="text-[10px] text-[#8b7355] font-bold">{t.dashboard.anonymousLabel}</span>
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center border border-[#5d4037] ${msg.is_read ? 'bg-gray-500' : 'bg-[#8b0000]'}`}>
-                    <span className="text-white text-[8px]">{msg.is_read ? '✓' : '25'}</span>
+                    {msg.is_read ? <Check size={12} className="text-white" /> : <Mail size={12} className="text-white" />}
                   </div>
                 </div>
               </motion.div>
@@ -426,7 +433,7 @@ export default function PersonalDashboard({ params }: PageProps) {
               className="fixed bottom-4 left-4 right-4 z-[100] mx-auto max-w-md"
             >
               <div className="bg-[#f4e4bc] border-l-4 border-[#8b0000] p-4 shadow-2xl rounded text-[#3e2723] font-cinzel font-bold text-center flex items-center justify-center gap-2">
-                <span>🔔</span>
+                <Bell size={18} className="shrink-0 text-[#8b0000]" />
                 {notification.message}
               </div>
             </motion.div>

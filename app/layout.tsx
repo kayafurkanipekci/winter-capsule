@@ -15,7 +15,7 @@ const courgette = Courgette({
 });
 
 export const metadata: Metadata = {
-  title: "Zaman Kapsülü | 2025",
+  title: "Zaman Kapsülü",
   description: "Yılbaşında açılmak üzere mühürlü mektuplar bırakın.",
 };
 
