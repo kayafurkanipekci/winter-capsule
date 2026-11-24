@@ -1,0 +1,30 @@
+{
+  "format": "pixel-art-studio-atlas-v1",
+  "name": "reindeer",
+  "image": "atlas.png",
+  "canvas": [
+    32,
+    24
+  ],
+  "size": [
+    32,
+    24
+  ],
+  "padding": 0,
+  "frames": [
+    {
+      "name": "reindeer",
+      "rect": [
+        0,
+        0,
+        32,
+        24
+      ],
+      "duration_ms": 400,
+      "pivot": [
+        16,
+        24
+      ]
+    }
+  ]
+}

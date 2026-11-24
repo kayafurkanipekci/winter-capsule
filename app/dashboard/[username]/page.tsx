@@ -5,9 +5,10 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import SnowEffect from "@/components/SnowEffect";
 import Mailbox from "@/components/Mailbox";
+import PixelSprite from "@/components/PixelSprite";
 import ShareDrawer from "@/components/ShareDrawer";
 import CalendarReminder from "@/components/CalendarReminder";
-import { Archive, LogOut, Send, Share2 } from "lucide-react";
+import { LogOut, Share2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/context";
 import { normalizeName } from "@/lib/normalize";
 
@@ -143,9 +144,10 @@ export default function PersonalDashboard({ params }: PageProps) {
 
   if (loading || !user || !currentSeasonInfo) {
     return (
-      <main className="relative min-h-screen bg-background flex items-center justify-center p-4">
+      <main className="relative min-h-screen bg-background flex flex-col items-center justify-center p-4 gap-3">
         <SnowEffect />
-        <p className="z-10 font-cinzel text-[#3e2723] dark:text-amber-300 animate-pulse">
+        <PixelSprite name="santa_cat" width={56} height={56} className="z-10 animate-bounce" />
+        <p className="z-10 font-cinzel text-[#2b1b17] dark:text-amber-300 font-bold">
           {t.dashboard.loading}
         </p>
       </main>
@@ -159,7 +161,7 @@ export default function PersonalDashboard({ params }: PageProps) {
       <div className="w-full max-w-5xl flex items-center justify-between pt-2 z-20">
         <button
           onClick={handleLogout}
-          className="text-[#3e2723] dark:text-amber-500/70 hover:text-[#5d4037] dark:hover:text-amber-400 font-cinzel text-sm transition-colors flex items-center gap-1.5"
+          className="px-3 py-1.5 pixel-btn pixel-btn-parchment font-cinzel text-xs font-bold flex items-center gap-1.5"
         >
           <LogOut size={14} />
           {t.dashboard.logout}
@@ -167,21 +169,25 @@ export default function PersonalDashboard({ params }: PageProps) {
 
         <button
           onClick={() => setShowShareDrawer(true)}
-          className="text-[#3e2723] dark:text-amber-200/80 hover:text-[#5d4037] dark:hover:text-white font-cinzel text-sm border-b border-dashed border-[#3e2723] dark:border-amber-500/30 transition-colors flex items-center gap-1 mr-20"
+          className="px-3 py-1.5 pixel-btn pixel-btn-red font-cinzel text-xs font-bold flex items-center gap-1.5 mr-20"
         >
           <Share2 size={14} />
           {t.dashboard.shareButton}
         </button>
       </div>
 
-      <div className="z-10 w-full max-w-2xl flex flex-col items-center mt-10 gap-8 pb-20">
+      <div className="z-10 w-full max-w-2xl flex flex-col items-center mt-8 gap-7 pb-20">
         <div className="text-center space-y-3">
-          <h1 className="font-cinzel text-3xl md:text-4xl font-bold text-[#3e2723] dark:text-amber-400">
-            {user.fullName}
-          </h1>
+          <div className="flex items-center justify-center gap-3">
+            <PixelSprite name="santa_cat" width={40} height={40} />
+            <h1 className="font-cinzel text-3xl md:text-4xl font-bold text-[#2b1b17] dark:text-amber-400">
+              {user.fullName}
+            </h1>
+          </div>
 
-          <div className="inline-block bg-[#f4e4bc] dark:bg-black/40 px-6 py-2 rounded-full border border-[#3e2723] dark:border-amber-500/30 backdrop-blur-md shadow-md dark:shadow-none">
-            <p className="font-cinzel text-[#3e2723] dark:text-amber-100 text-base">
+          <div className="inline-flex items-center gap-2 pixel-panel px-5 py-2">
+            <PixelSprite name="bell" width={18} height={18} />
+            <p className="font-cinzel text-[#2b1b17] font-bold text-sm sm:text-base">
               {t.dashboard.seasonTitle(currentSeasonInfo.season)} ·{" "}
               {currentSeasonInfo.isUnlocked ? t.dashboard.sealsOpened : timeLeft}
             </p>
@@ -201,11 +207,14 @@ export default function PersonalDashboard({ params }: PageProps) {
             isOpen={false}
           />
 
-          <div className="bg-[#f4e4bc] border-2 border-[#3e2723] rounded-xl p-5 text-center shadow-lg max-w-md w-full space-y-3">
-            <p className="font-cinzel text-lg font-bold text-[#3e2723]">
-              {t.dashboard.cardsCollected(currentSeasonInfo.cardCount)}
-            </p>
-            <p className="font-merriweather text-xs text-[#5d4037] italic">
+          <div className="pixel-panel p-5 text-center max-w-md w-full space-y-3">
+            <div className="flex items-center justify-center gap-2">
+              <PixelSprite name="gift_box" width={28} height={28} />
+              <p className="font-cinzel text-lg font-bold text-[#2b1b17]">
+                {t.dashboard.cardsCollected(currentSeasonInfo.cardCount)}
+              </p>
+            </div>
+            <p className="font-merriweather text-xs text-[#5d4037]">
               {t.dashboard.minFourHint}
             </p>
 
@@ -216,7 +225,7 @@ export default function PersonalDashboard({ params }: PageProps) {
                     `/dashboard/${encodeURIComponent(user.username)}/game/${currentSeasonInfo.season}`
                   )
                 }
-                className="w-full py-3 bg-[#8b0000] text-[#f4e4bc] font-cinzel font-bold rounded shadow hover:bg-[#a50000] transition-colors"
+                className="w-full py-3 pixel-btn pixel-btn-red font-cinzel font-bold text-base"
               >
                 {currentSeasonInfo.status === "in_progress"
                   ? t.dashboard.continueGame
@@ -235,16 +244,16 @@ export default function PersonalDashboard({ params }: PageProps) {
         </motion.div>
 
         {/* Authored Cards Section */}
-        <section className="w-full bg-[#f4e4bc] border-2 border-[#3e2723] rounded-xl p-5 shadow-lg space-y-4">
-          <div className="flex items-center gap-2 border-b border-[#8b7355]/30 pb-2">
-            <Send size={16} className="text-[#8b0000]" />
-            <h2 className="font-cinzel text-lg font-bold text-[#3e2723]">
+        <section className="w-full pixel-panel p-5 space-y-4">
+          <div className="flex items-center gap-2 border-b-2 border-[#8b7355]/40 pb-2">
+            <PixelSprite name="envelope_sealed" width={24} height={17} />
+            <h2 className="font-cinzel text-lg font-bold text-[#2b1b17]">
               {t.dashboard.authored.title}
             </h2>
           </div>
 
           {authoredCards.length === 0 ? (
-            <p className="font-merriweather text-xs text-[#5d4037] italic text-center py-2">
+            <p className="font-merriweather text-xs text-[#5d4037] text-center py-2">
               {t.dashboard.authored.empty}
             </p>
           ) : (
@@ -252,22 +261,22 @@ export default function PersonalDashboard({ params }: PageProps) {
               {authoredCards.map((card) => (
                 <div
                   key={card.id}
-                  className="bg-[#e6d5aa]/60 border border-[#8b7355]/30 rounded-lg p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1"
+                  className="pixel-inset p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1"
                 >
                   <div>
-                    <p className="font-cinzel font-bold text-sm text-[#3e2723]">
+                    <p className="font-cinzel font-bold text-sm text-[#2b1b17]">
                       {card.receiverName}
                     </p>
-                    <p className="text-[11px] font-cinzel text-[#8b7355]">
+                    <p className="text-[11px] font-cinzel text-[#5d4037]">
                       {t.dashboard.seasonTitle(card.season)}
                     </p>
                   </div>
                   <span
                     className={`text-xs font-merriweather font-bold ${
                       card.outcome === "found"
-                        ? "text-green-800"
+                        ? "text-[#1b4332]"
                         : card.outcome === "missed"
-                          ? "text-[#8b0000]"
+                          ? "text-[#b91c1c]"
                           : "text-[#5d4037]"
                     }`}
                   >
@@ -281,10 +290,10 @@ export default function PersonalDashboard({ params }: PageProps) {
 
         {/* Past Seasons Section */}
         {pastSeasons.length > 0 && (
-          <section className="w-full bg-[#f4e4bc] border-2 border-[#3e2723] rounded-xl p-5 shadow-lg space-y-3">
-            <div className="flex items-center gap-2 border-b border-[#8b7355]/30 pb-2">
-              <Archive size={16} className="text-[#8b0000]" />
-              <h2 className="font-cinzel text-lg font-bold text-[#3e2723]">
+          <section className="w-full pixel-panel p-5 space-y-3">
+            <div className="flex items-center gap-2 border-b-2 border-[#8b7355]/40 pb-2">
+              <PixelSprite name="holly" width={24} height={18} />
+              <h2 className="font-cinzel text-lg font-bold text-[#2b1b17]">
                 {t.dashboard.pastSeasonsTitle}
               </h2>
             </div>
@@ -293,10 +302,10 @@ export default function PersonalDashboard({ params }: PageProps) {
               {pastSeasons.map((s) => (
                 <div
                   key={s.season}
-                  className="bg-[#e6d5aa]/60 border border-[#8b7355]/30 rounded-lg p-3 flex items-center justify-between"
+                  className="pixel-inset p-3 flex items-center justify-between gap-3"
                 >
                   <div>
-                    <p className="font-cinzel font-bold text-sm text-[#3e2723]">
+                    <p className="font-cinzel font-bold text-sm text-[#2b1b17]">
                       {t.dashboard.seasonTitle(s.season)}
                     </p>
                     <p className="text-xs font-merriweather text-[#5d4037]">
@@ -311,7 +320,7 @@ export default function PersonalDashboard({ params }: PageProps) {
                           `/dashboard/${encodeURIComponent(user.username)}/game/${s.season}`
                         )
                       }
-                      className="px-3 py-1.5 bg-[#3e2723] text-[#f4e4bc] font-cinzel text-xs font-bold rounded hover:bg-[#5d4037]"
+                      className="px-3 py-1.5 pixel-btn pixel-btn-wood font-cinzel text-xs font-bold"
                     >
                       {s.status === "in_progress"
                         ? t.dashboard.continueGame

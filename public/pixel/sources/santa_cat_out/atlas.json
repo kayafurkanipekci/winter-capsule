@@ -1,0 +1,30 @@
+{
+  "format": "pixel-art-studio-atlas-v1",
+  "name": "santa_cat",
+  "image": "atlas.png",
+  "canvas": [
+    20,
+    20
+  ],
+  "size": [
+    20,
+    20
+  ],
+  "padding": 0,
+  "frames": [
+    {
+      "name": "santa_cat",
+      "rect": [
+        0,
+        0,
+        20,
+        20
+      ],
+      "duration_ms": 400,
+      "pivot": [
+        10,
+        20
+      ]
+    }
+  ]
+}

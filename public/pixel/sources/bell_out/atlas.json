@@ -1,0 +1,30 @@
+{
+  "format": "pixel-art-studio-atlas-v1",
+  "name": "bell",
+  "image": "atlas.png",
+  "canvas": [
+    14,
+    14
+  ],
+  "size": [
+    14,
+    14
+  ],
+  "padding": 0,
+  "frames": [
+    {
+      "name": "bell",
+      "rect": [
+        0,
+        0,
+        14,
+        14
+      ],
+      "duration_ms": 400,
+      "pivot": [
+        7,
+        14
+      ]
+    }
+  ]
+}

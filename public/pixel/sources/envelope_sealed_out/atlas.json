@@ -1,0 +1,30 @@
+{
+  "format": "pixel-art-studio-atlas-v1",
+  "name": "envelope_sealed",
+  "image": "atlas.png",
+  "canvas": [
+    20,
+    14
+  ],
+  "size": [
+    20,
+    14
+  ],
+  "padding": 0,
+  "frames": [
+    {
+      "name": "envelope_sealed",
+      "rect": [
+        0,
+        0,
+        20,
+        14
+      ],
+      "duration_ms": 400,
+      "pivot": [
+        10,
+        14
+      ]
+    }
+  ]
+}

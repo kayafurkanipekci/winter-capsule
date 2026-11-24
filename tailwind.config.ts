@@ -19,11 +19,8 @@ const config: Config = {
                     "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
             },
             fontFamily: {
-                // User wants everything to be 'Alice'.
-                // Mapping existing classes to Alice to avoid massive refactor.
                 cinzel: ["var(--font-alice)"],
-                merriweather: ["var(--font-alice)"],
-                // Special font for letter content
+                merriweather: ["var(--font-body)"],
                 hand: ["var(--font-courgette)"],
             },
         },

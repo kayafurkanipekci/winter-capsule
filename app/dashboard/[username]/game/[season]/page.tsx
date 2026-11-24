@@ -6,6 +6,8 @@ import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { toPng } from "html-to-image";
 import SnowEffect from "@/components/SnowEffect";
+import PixelSprite from "@/components/PixelSprite";
+import PixelRulesModal from "@/components/PixelRulesModal";
 import {
   Check,
   Download,
@@ -13,7 +15,6 @@ import {
   Paperclip,
   SkipForward,
   Sparkles,
-  Trophy,
   X,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/context";
@@ -97,6 +98,7 @@ export default function GamePage({ params }: PageProps) {
   const [togglingShare, setTogglingShare] = useState(false);
   const [sharingImage, setSharingImage] = useState(false);
   const resultStoryRef = useRef<HTMLDivElement>(null);
+  const rulesShownRef = useRef(false);
 
   const loadCircle = useCallback(async () => {
     const res = await fetch(`/api/circle/${season}`);
@@ -133,7 +135,8 @@ export default function GamePage({ params }: PageProps) {
       await loadResults();
     } else if (data.card) {
       setGameState(data);
-      if (data.answeredCount === 0 && data.card.revealedCount === 1) {
+      if (!rulesShownRef.current && data.answeredCount === 0 && data.card.revealedCount === 1) {
+        rulesShownRef.current = true;
         setShowRulesModal(true);
       }
     }
@@ -280,9 +283,10 @@ export default function GamePage({ params }: PageProps) {
 
   if (loading) {
     return (
-      <main className="relative min-h-screen bg-background flex items-center justify-center p-4">
+      <main className="relative min-h-screen bg-background flex flex-col items-center justify-center p-4 gap-3">
         <SnowEffect />
-        <p className="z-10 font-cinzel text-[#3e2723] dark:text-amber-300 animate-pulse">
+        <PixelSprite name="santa_cat" width={56} height={56} className="z-10 animate-bounce" />
+        <p className="z-10 font-cinzel text-[#2b1b17] dark:text-amber-300 font-bold">
           {t.game.loading}
         </p>
       </main>
@@ -296,7 +300,7 @@ export default function GamePage({ params }: PageProps) {
       <div className="w-full max-w-5xl flex items-center justify-between pt-2 z-20">
         <Link
           href={`/dashboard/${encodeURIComponent(username)}`}
-          className="text-[#3e2723] dark:text-amber-400 hover:underline font-cinzel text-sm"
+          className="px-3 py-1.5 pixel-btn pixel-btn-parchment font-cinzel text-xs font-bold"
         >
           ← {t.game.backToDashboard}
         </Link>
@@ -305,15 +309,15 @@ export default function GamePage({ params }: PageProps) {
       {/* ACTIVE GAME SCREEN */}
       {gameState && (
         <div className="z-10 w-full max-w-5xl mt-6 space-y-6">
-          {/* Progress Bar */}
+          {/* Pixel Progress Bar */}
           <div className="max-w-xl mx-auto space-y-2">
-            <div className="flex justify-between text-xs font-cinzel text-[#3e2723] dark:text-amber-200">
+            <div className="flex justify-between text-xs font-cinzel font-bold text-[#2b1b17] dark:text-amber-200">
               <span>{t.dashboard.seasonTitle(season)}</span>
               <span>{t.game.progress(gameState.answeredCount, gameState.totalCount)}</span>
             </div>
-            <div className="w-full h-2.5 bg-[#e6d5aa] dark:bg-zinc-800 rounded-full overflow-hidden border border-[#8b7355]/40">
+            <div className="w-full h-4 bg-[#e6d5aa] dark:bg-zinc-900 border-3 border-[#2b1b17] shadow-[3px_3px_0_#2b1b17]">
               <div
-                className="h-full bg-[#8b0000] transition-all duration-300"
+                className="h-full bg-[#b91c1c] transition-all duration-300"
                 style={{
                   width: `${(gameState.answeredCount / Math.max(1, gameState.totalCount)) * 100}%`,
                 }}
@@ -327,23 +331,26 @@ export default function GamePage({ params }: PageProps) {
               <AnimatePresence mode="wait">
                 <motion.div
                   key={gameState.card.id}
-                  initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, rotateY: -20, scale: 0.96 }}
+                  initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, rotateY: -18, scale: 0.96 }}
                   animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, rotateY: 0, scale: 1 }}
-                  exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, rotateY: 20, scale: 0.96 }}
+                  exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, rotateY: 18, scale: 0.96 }}
                   transition={{ duration: 0.35 }}
-                  className="bg-[#f4e4bc] p-6 md:p-8 rounded-lg shadow-2xl border-4 border-[#3e2723] space-y-5"
+                  className="pixel-panel p-6 md:p-8 space-y-5"
                 >
-                  <div className="flex items-center justify-between border-b border-[#8b7355]/30 pb-3">
-                    <span className="font-cinzel text-sm font-bold tracking-widest text-[#8b0000]">
-                      {t.game.whoAmI}
-                    </span>
+                  <div className="flex items-center justify-between border-b-2 border-[#8b7355]/40 pb-3">
+                    <div className="flex items-center gap-2">
+                      <PixelSprite name="santa_cat" width={30} height={30} />
+                      <span className="font-cinzel text-base font-bold tracking-wider text-[#b91c1c]">
+                        {t.game.whoAmI}
+                      </span>
+                    </div>
                     <button
                       type="button"
                       onClick={() => setShowRulesModal(true)}
-                      className="text-[#8b7355] hover:text-[#3e2723]"
+                      className="text-[#5d4037] hover:text-[#2b1b17]"
                       aria-label={t.game.rulesModal.title}
                     >
-                      <HelpCircle size={18} />
+                      <HelpCircle size={20} />
                     </button>
                   </div>
 
@@ -353,16 +360,17 @@ export default function GamePage({ params }: PageProps) {
                         key={`${clue.type}-${idx}`}
                         initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-[#e6d5aa]/60 border border-[#8b7355]/30 rounded p-4"
+                        className="pixel-inset p-4"
                       >
                         {clue.type === "photo" ? (
                           <img
                             src={clue.value}
                             alt="Clue"
-                            className="max-h-72 mx-auto rounded border-2 border-[#3e2723] object-contain"
+                            onClick={() => setPolaroidUrl(clue.value)}
+                            className="max-h-72 mx-auto border-3 border-[#2b1b17] object-contain cursor-zoom-in hover:scale-[1.02] transition-transform"
                           />
                         ) : (
-                          <p className="font-merriweather text-[#3e2723] text-base leading-relaxed">
+                          <p className="font-merriweather text-[#2b1b17] text-base leading-relaxed">
                             "{clue.value}"
                           </p>
                         )}
@@ -376,18 +384,18 @@ export default function GamePage({ params }: PageProps) {
                         type="button"
                         disabled={revealing}
                         onClick={handleRevealHint}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#3e2723] text-[#f4e4bc] font-cinzel text-sm font-bold rounded hover:bg-[#5d4037] disabled:opacity-50"
+                        className="inline-flex items-center gap-2 px-4 py-2 pixel-btn pixel-btn-green font-cinzel text-sm font-bold disabled:opacity-50"
                       >
                         <Sparkles size={16} />
                         {t.game.revealClue}
                       </button>
                     ) : (
-                      <span className="text-xs font-merriweather italic text-[#8b7355]">
+                      <span className="text-xs font-merriweather text-[#5d4037]">
                         {t.game.noMoreClues}
                       </span>
                     )}
 
-                    <span className="text-xs font-cinzel text-[#5d4037]">
+                    <span className="text-xs font-cinzel font-bold text-[#5d4037]">
                       {t.game.cluesRemaining(
                         gameState.card.totalClues - gameState.card.revealedCount
                       )}
@@ -398,15 +406,18 @@ export default function GamePage({ params }: PageProps) {
             </div>
 
             {/* Right / Bottom: Name List & Pass */}
-            <div className="lg:col-span-5 bg-[#f4e4bc] p-6 rounded-lg shadow-xl border-2 border-[#3e2723] space-y-4">
-              <h2 className="font-cinzel text-lg font-bold text-[#3e2723]">
-                {t.game.namesTitle}
-              </h2>
-              <p className="font-merriweather text-xs text-[#5d4037] italic">
+            <div className="lg:col-span-5 pixel-panel p-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <PixelSprite name="holly" width={24} height={18} />
+                <h2 className="font-cinzel text-lg font-bold text-[#2b1b17]">
+                  {t.game.namesTitle}
+                </h2>
+              </div>
+              <p className="font-merriweather text-xs text-[#5d4037]">
                 {t.game.namesHint}
               </p>
 
-              <div className="space-y-2 max-h-80 overflow-y-auto pr-1 custom-scrollbar">
+              <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1 custom-scrollbar">
                 <AnimatePresence>
                   {gameState.availableNames.map((person) => (
                     <motion.button
@@ -421,7 +432,7 @@ export default function GamePage({ params }: PageProps) {
                           fullName: person.fullName,
                         })
                       }
-                      className="w-full text-left px-4 py-3 bg-[#e6d5aa]/70 hover:bg-[#3e2723] hover:text-[#f4e4bc] text-[#3e2723] font-merriweather text-sm rounded border border-[#8b7355]/40 transition-colors"
+                      className="w-full text-left px-4 py-3 pixel-btn pixel-btn-parchment hover:!bg-[#3e2723] hover:!text-[#f4e4bc] font-merriweather font-bold text-sm"
                     >
                       {person.fullName}
                     </motion.button>
@@ -429,11 +440,11 @@ export default function GamePage({ params }: PageProps) {
                 </AnimatePresence>
               </div>
 
-              {gameState.answeredCount + 1 < gameState.totalCount && (
+              {gameState.totalCount - gameState.answeredCount > 1 && (
                 <button
                   type="button"
                   onClick={() => setPendingAction({ type: "pass" })}
-                  className="w-full py-3 bg-[#8b7355]/20 hover:bg-[#8b7355]/30 text-[#5d4037] font-cinzel font-bold text-sm rounded border border-[#8b7355]/40 flex items-center justify-center gap-2 transition-colors"
+                  className="w-full py-3 pixel-btn pixel-btn-wood font-cinzel font-bold text-sm flex items-center justify-center gap-2"
                 >
                   <SkipForward size={16} />
                   {t.game.passButton}
@@ -447,33 +458,38 @@ export default function GamePage({ params }: PageProps) {
       {/* RESULTS / CLASSIC SCREEN */}
       {resultsState && (
         <div className="z-10 w-full max-w-4xl mt-6 space-y-6">
-          <div className="bg-[#f4e4bc] p-6 md:p-8 rounded-lg shadow-2xl border-4 border-[#3e2723] text-center space-y-2">
-            <h1 className="font-cinzel text-2xl md:text-3xl font-bold text-[#3e2723]">
-              {resultsState.mode === "classic"
-                ? t.game.results.classicTitle
-                : t.game.results.title}
-            </h1>
+          <div className="pixel-panel p-6 md:p-8 text-center space-y-3">
+            <div className="flex items-center justify-center gap-3">
+              <PixelSprite name="gift_box" width={36} height={36} />
+              <h1 className="font-cinzel text-2xl md:text-3xl font-bold text-[#2b1b17]">
+                {resultsState.mode === "classic"
+                  ? t.game.results.classicTitle
+                  : t.game.results.title}
+              </h1>
+              <PixelSprite name="santa_cat" width={40} height={40} />
+            </div>
+
             {resultsState.mode === "game" ? (
               <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-                <span className="px-4 py-1.5 bg-[#3e2723] text-[#f4e4bc] font-cinzel font-bold rounded-full text-sm">
+                <span className="px-4 py-1.5 bg-[#3e2723] text-[#f4e4bc] border-2 border-[#2b1b17] shadow-[3px_3px_0_#2b1b17] font-cinzel font-bold text-sm">
                   {t.game.results.totalScore(
                     resultsState.totalPoints ?? 0,
                     resultsState.maxPoints ?? 0
                   )}
                 </span>
-                <span className="px-4 py-1.5 bg-[#8b0000] text-[#f4e4bc] font-cinzel font-bold rounded-full text-sm">
+                <span className="px-4 py-1.5 bg-[#b91c1c] text-[#fffdf7] border-2 border-[#2b1b17] shadow-[3px_3px_0_#2b1b17] font-cinzel font-bold text-sm">
                   %{resultsState.percent ?? 0}
                 </span>
               </div>
             ) : (
-              <p className="font-merriweather text-sm text-[#5d4037] italic">
+              <p className="font-merriweather text-sm text-[#5d4037]">
                 {t.game.results.classicSubtitle}
               </p>
             )}
           </div>
 
           {resultsState.cards.length === 0 ? (
-            <div className="bg-[#f4e4bc] p-8 rounded-lg border-2 border-[#3e2723] text-center font-merriweather text-[#5d4037]">
+            <div className="pixel-panel p-8 text-center font-merriweather text-[#5d4037]">
               {t.game.results.classicEmpty}
             </div>
           ) : (
@@ -481,22 +497,26 @@ export default function GamePage({ params }: PageProps) {
               {resultsState.cards.map((card) => (
                 <div
                   key={card.id}
-                  className="bg-[#f4e4bc] p-6 rounded-lg shadow-lg border-2 border-[#3e2723] space-y-4 relative"
+                  className="pixel-panel p-6 space-y-4 relative"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#8b7355]/30 pb-3">
-                    <h3 className="font-cinzel text-xl font-bold text-[#3e2723]">
-                      {card.authorName}
-                    </h3>
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-[#8b7355]/40 pb-3">
+                    <div className="flex items-center gap-2">
+                      <PixelSprite name="holly" width={20} height={15} />
+                      <h3 className="font-cinzel text-xl font-bold text-[#2b1b17]">
+                        {card.authorName}
+                      </h3>
+                    </div>
 
                     {resultsState.mode === "game" && (
                       <div className="flex items-center gap-2">
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-cinzel font-bold ${card.outcome === "correct"
-                              ? "bg-green-700 text-white"
+                          className={`px-3 py-1 border-2 border-[#2b1b17] text-xs font-cinzel font-bold ${
+                            card.outcome === "correct"
+                              ? "bg-[#1b4332] text-[#f4e4bc]"
                               : card.outcome === "passed"
                                 ? "bg-zinc-600 text-white"
-                                : "bg-[#8b0000] text-white"
-                            }`}
+                                : "bg-[#b91c1c] text-white"
+                          }`}
                         >
                           {card.outcome === "correct"
                             ? t.game.results.correct
@@ -504,21 +524,21 @@ export default function GamePage({ params }: PageProps) {
                               ? t.game.results.passed
                               : t.game.results.wrong}
                         </span>
-                        <span className="font-cinzel font-bold text-sm text-[#3e2723]">
+                        <span className="font-cinzel font-bold text-sm text-[#2b1b17]">
                           {(card.points ?? 0) >= 0 ? `+${card.points}` : card.points}
                         </span>
                       </div>
                     )}
                   </div>
 
-                  {resultsState.mode === "game" && card.guessedName && (
+                  {resultsState.mode === "game" && card.outcome === "wrong" && card.guessedName && (
                     <p className="text-xs font-merriweather text-[#5d4037]">
                       {t.game.results.yourGuess}: <strong>{card.guessedName}</strong>
                     </p>
                   )}
 
-                  <div className="space-y-2 text-sm font-merriweather text-[#3e2723]">
-                    <p className="text-xs font-cinzel text-[#8b7355] uppercase">
+                  <div className="space-y-2 text-sm font-merriweather text-[#2b1b17]">
+                    <p className="text-xs font-cinzel font-bold text-[#5d4037] uppercase">
                       {t.game.results.cluesLabel}
                     </p>
                     <p className="italic">"{card.clueText}"</p>
@@ -529,18 +549,19 @@ export default function GamePage({ params }: PageProps) {
                       <img
                         src={card.cluePhotoUrl}
                         alt="Clue"
-                        className="h-32 w-32 object-cover rounded border border-[#3e2723] mt-2"
+                        onClick={() => setPolaroidUrl(card.cluePhotoUrl)}
+                        className="h-32 w-32 object-cover border-3 border-[#2b1b17] mt-2 cursor-zoom-in hover:scale-[1.03] transition-transform"
                       />
                     )}
                   </div>
 
                   {(card.note || card.notePhotoUrl) && (
-                    <div className="relative bg-[#e6d5aa]/70 border border-[#8b7355]/40 rounded p-4 pr-12">
-                      <p className="text-xs font-cinzel text-[#8b7355] uppercase mb-1">
+                    <div className="relative pixel-inset p-4 pr-12">
+                      <p className="text-xs font-cinzel font-bold text-[#5d4037] uppercase mb-1">
                         {t.game.results.noteLabel}
                       </p>
                       {card.note && (
-                        <p className="font-hand text-base text-[#3e2723] whitespace-pre-wrap">
+                        <p className="font-hand text-base text-[#2b1b17] whitespace-pre-wrap">
                           {card.note}
                         </p>
                       )}
@@ -548,7 +569,7 @@ export default function GamePage({ params }: PageProps) {
                         <button
                           type="button"
                           onClick={() => setPolaroidUrl(card.notePhotoUrl)}
-                          className="absolute bottom-3 right-3 p-2 bg-[#f4e4bc] border border-[#8b7355] rounded-full text-[#8b0000] hover:scale-110 transition-transform shadow"
+                          className="absolute bottom-3 right-3 p-2 bg-[#f4e4bc] border-2 border-[#2b1b17] text-[#b91c1c] hover:scale-110 transition-transform shadow-[2px_2px_0_#2b1b17]"
                           aria-label={t.game.results.openAttachment}
                           title={t.game.results.openAttachment}
                         >
@@ -562,61 +583,91 @@ export default function GamePage({ params }: PageProps) {
             </div>
           )}
 
+          {/* CIRCLE LEADERBOARD & RESULT SHARE */}
           {resultsState.mode === "game" && (
             <div className="space-y-6 pt-2">
-              <div className="bg-[#f4e4bc] p-6 rounded-lg shadow-lg border-2 border-[#3e2723] space-y-4">
+              <div className="pixel-panel p-6 space-y-5">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <label className="flex items-center gap-3 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={Boolean(resultsState.shareInCircle)}
-                      disabled={togglingShare}
-                      onChange={(e) => handleToggleCircleShare(e.target.checked)}
-                      className="w-4 h-4 accent-[#8b0000]"
-                    />
-                    <span className="font-merriweather text-sm text-[#3e2723] font-bold">
-                      {t.game.results.shareInCircleToggle}
-                    </span>
-                  </label>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={Boolean(resultsState.shareInCircle)}
+                    disabled={togglingShare}
+                    onClick={() => handleToggleCircleShare(!resultsState.shareInCircle)}
+                    className={`flex items-center justify-between gap-3 px-4 py-2.5 border-3 border-[#2b1b17] shadow-[3px_3px_0_#2b1b17] transition-colors cursor-pointer select-none disabled:opacity-60 ${
+                      resultsState.shareInCircle
+                        ? "bg-[#1b4332] text-[#f4e4bc]"
+                        : "bg-[#e6d5aa] text-[#2b1b17]"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <PixelSprite
+                        name={resultsState.shareInCircle ? "trophy_crown" : "bell"}
+                        width={20}
+                        height={20}
+                      />
+                      <span className="font-merriweather text-xs sm:text-sm font-bold">
+                        {t.game.results.shareInCircleToggle}
+                      </span>
+                    </div>
+
+                    {/* Pixel Switch Track */}
+                    <div
+                      className={`w-11 h-6 border-2 border-[#2b1b17] p-0.5 flex items-center transition-colors shrink-0 ${
+                        resultsState.shareInCircle ? "bg-[#fbbf24] justify-end" : "bg-[#d4c39b] justify-start"
+                      }`}
+                    >
+                      <div className="w-4 h-4 bg-[#fffdf7] border-2 border-[#2b1b17]" />
+                    </div>
+                  </button>
 
                   <button
                     type="button"
                     disabled={sharingImage}
                     onClick={handleShareResultImage}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-cinzel font-bold text-xs rounded shadow hover:scale-[1.02] transition-transform disabled:opacity-60"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 pixel-btn pixel-btn-red font-cinzel font-bold text-xs disabled:opacity-60"
                   >
                     <Download size={16} />
                     {t.game.results.shareResultImage}
                   </button>
                 </div>
 
-                <div className="pt-4 border-t border-[#8b7355]/30 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Trophy size={16} className="text-[#8b0000]" />
-                    <h2 className="font-cinzel text-lg font-bold text-[#3e2723]">
-                      {t.game.results.circleTitle}
-                    </h2>
+                <div className="pt-4 border-t-2 border-[#8b7355]/40 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <PixelSprite name="trophy_crown" width={28} height={28} />
+                      <h2 className="font-cinzel text-xl font-bold text-[#2b1b17]">
+                        {t.game.results.circleTitle}
+                      </h2>
+                    </div>
+                    <PixelSprite name="pine_tree" width={24} height={32} />
                   </div>
 
                   {circleEntries.length <= 1 ? (
-                    <p className="font-merriweather text-xs text-[#5d4037] italic">
+                    <p className="font-merriweather text-xs text-[#5d4037]">
                       {t.game.results.circleEmpty}
                     </p>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-2.5">
                       {circleEntries.map((entry, idx) => (
                         <div
                           key={`${entry.fullName}-${idx}`}
-                          className={`flex items-center justify-between px-4 py-2.5 rounded border ${entry.isSelf
-                              ? "bg-[#3e2723] text-[#f4e4bc] border-[#3e2723]"
-                              : "bg-[#e6d5aa]/60 text-[#3e2723] border-[#8b7355]/30"
-                            }`}
+                          className={`flex items-center justify-between px-4 py-3 border-3 border-[#2b1b17] shadow-[3px_3px_0_#2b1b17] ${
+                            entry.isSelf
+                              ? "bg-[#1b4332] text-[#f4e4bc]"
+                              : idx === 0
+                                ? "bg-[#fbbf24] text-[#2b1b17]"
+                                : "bg-[#e6d5aa] text-[#2b1b17]"
+                          }`}
                         >
-                          <span className="font-merriweather text-sm">
-                            {idx + 1}. {entry.fullName}{" "}
-                            {entry.isSelf ? `(${t.game.results.youLabel})` : ""}
-                          </span>
-                          <span className="font-cinzel font-bold text-sm">
+                          <div className="flex items-center gap-2.5">
+                            {idx === 0 && <PixelSprite name="trophy_crown" width={20} height={20} />}
+                            <span className="font-merriweather font-bold text-sm">
+                              #{idx + 1} {entry.fullName}{" "}
+                              {entry.isSelf ? `(${t.game.results.youLabel})` : ""}
+                            </span>
+                          </div>
+                          <span className="font-cinzel font-bold text-base">
                             %{entry.percent}
                           </span>
                         </div>
@@ -626,25 +677,47 @@ export default function GamePage({ params }: PageProps) {
                 </div>
               </div>
 
-              {/* Hidden off-screen result story card for html-to-image */}
+              {/* Off-screen result story card for html-to-image */}
               <div className="fixed -left-[9999px] top-0">
                 <div
                   ref={resultStoryRef}
-                  className="w-[1080px] h-[1920px] bg-[#0a0f0d] flex flex-col items-center justify-center relative overflow-hidden"
-                  style={{ fontFamily: "serif" }}
+                  className="w-[1080px] h-[1920px] bg-[#0a1410] flex flex-col items-center justify-center relative overflow-hidden"
+                  style={{ fontFamily: "var(--font-alice), monospace" }}
                 >
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-amber-900/40 via-[#0a0f0d] to-[#0a0f0d]" />
-                  <div className="z-10 bg-[#f4e4bc] p-16 rounded-3xl shadow-[0_0_100px_rgba(251,191,36,0.3)] border-[8px] border-[#3e2723] text-center max-w-[820px] space-y-10">
-                    <h1 className="text-6xl text-[#3e2723] font-bold">
+                  <div className="z-10 flex items-end justify-center gap-10 mb-10">
+                    <img
+                      src="/pixel/pine_tree.png"
+                      alt=""
+                      width={144}
+                      height={192}
+                      style={{ imageRendering: "pixelated" }}
+                    />
+                    <img
+                      src="/pixel/trophy_crown.png"
+                      alt=""
+                      width={144}
+                      height={144}
+                      style={{ imageRendering: "pixelated" }}
+                    />
+                    <img
+                      src="/pixel/santa_cat.png"
+                      alt=""
+                      width={144}
+                      height={144}
+                      style={{ imageRendering: "pixelated" }}
+                    />
+                  </div>
+                  <div className="z-10 bg-[#f4e4bc] p-16 border-[14px] border-[#2b1b17] shadow-[20px_20px_0_#040806] text-center max-w-[840px] w-full space-y-10">
+                    <h1 className="text-6xl text-[#2b1b17] font-bold">
                       {t.shareDrawer.storyTitle}
                     </h1>
                     <p className="text-4xl text-[#5d4037]">
                       {t.dashboard.seasonTitle(resultsState.season)}
                     </p>
-                    <div className="bg-[#8b0000] text-[#f4e4bc] text-8xl py-10 px-16 rounded-2xl inline-block font-bold">
+                    <div className="bg-[#b91c1c] text-[#fffdf7] border-[8px] border-[#2b1b17] shadow-[10px_10px_0_#2b1b17] text-8xl py-10 px-16 inline-block font-bold">
                       %{resultsState.percent ?? 0}
                     </div>
-                    <p className="text-4xl text-[#3e2723] font-bold">
+                    <p className="text-4xl text-[#2b1b17] font-bold">
                       {t.game.results.totalScore(
                         resultsState.totalPoints ?? 0,
                         resultsState.maxPoints ?? 0
@@ -659,51 +732,10 @@ export default function GamePage({ params }: PageProps) {
       )}
 
       {/* RULES & SCORING MODAL */}
-      <AnimatePresence>
-        {showRulesModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.92, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.92, opacity: 0 }}
-              className="bg-[#f4e4bc] border-4 border-[#3e2723] rounded-lg max-w-md w-full p-6 space-y-4 shadow-2xl"
-            >
-              <h2 className="font-cinzel text-xl font-bold text-[#3e2723] text-center">
-                {t.game.rulesModal.title}
-              </h2>
-              <ul className="space-y-2 text-sm font-merriweather text-[#3e2723] list-disc pl-5">
-                <li>{t.game.rulesModal.rule1}</li>
-                <li>{t.game.rulesModal.rule2}</li>
-                <li>{t.game.rulesModal.rule3}</li>
-              </ul>
-
-              <div className="bg-[#e6d5aa]/70 border border-[#8b7355]/40 rounded p-3 space-y-1 text-xs font-merriweather text-[#3e2723]">
-                <p className="font-cinzel font-bold text-sm mb-1">
-                  {t.game.rulesModal.scoringTitle}
-                </p>
-                <p>{t.game.rulesModal.scoreNoHint}</p>
-                <p>{t.game.rulesModal.scoreOneHint}</p>
-                <p>{t.game.rulesModal.scoreTwoHints}</p>
-                <p>{t.game.rulesModal.scorePass}</p>
-                <p>{t.game.rulesModal.scoreWrong}</p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowRulesModal(false)}
-                className="w-full py-3 bg-[#8b0000] text-[#f4e4bc] font-cinzel font-bold rounded hover:bg-[#a50000]"
-              >
-                {t.game.rulesModal.startButton}
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <PixelRulesModal
+        isOpen={showRulesModal}
+        onClose={() => setShowRulesModal(false)}
+      />
 
       {/* CONFIRMATION MODAL */}
       <AnimatePresence>
@@ -718,9 +750,9 @@ export default function GamePage({ params }: PageProps) {
               initial={{ scale: 0.92, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.92, opacity: 0 }}
-              className="bg-[#f4e4bc] border-4 border-[#8b0000] rounded-lg max-w-sm w-full p-6 space-y-4 shadow-2xl text-center"
+              className="pixel-panel max-w-sm w-full p-6 space-y-4 text-center"
             >
-              <h3 className="font-cinzel text-lg font-bold text-[#3e2723]">
+              <h3 className="font-cinzel text-lg font-bold text-[#2b1b17]">
                 {t.game.confirmTitle}
               </h3>
               <p className="font-merriweather text-sm text-[#5d4037]">
@@ -733,7 +765,7 @@ export default function GamePage({ params }: PageProps) {
                   type="button"
                   disabled={submitting}
                   onClick={() => setPendingAction(null)}
-                  className="flex-1 min-h-[44px] py-2.5 bg-[#e6d5aa] text-[#3e2723] font-cinzel font-bold text-sm rounded border border-[#8b7355] flex items-center justify-center"
+                  className="flex-1 min-h-[44px] py-2.5 pixel-btn pixel-btn-parchment font-cinzel font-bold text-sm flex items-center justify-center"
                 >
                   {t.game.confirmCancel}
                 </button>
@@ -741,7 +773,7 @@ export default function GamePage({ params }: PageProps) {
                   type="button"
                   disabled={submitting}
                   onClick={handleConfirmAction}
-                  className="flex-1 min-h-[44px] py-2.5 bg-[#8b0000] text-[#f4e4bc] font-cinzel font-bold text-sm rounded flex items-center justify-center gap-1.5"
+                  className="flex-1 min-h-[44px] py-2.5 pixel-btn pixel-btn-red font-cinzel font-bold text-sm flex items-center justify-center gap-1.5"
                 >
                   <Check size={16} />
                   {t.game.confirmOk}
@@ -763,23 +795,23 @@ export default function GamePage({ params }: PageProps) {
             className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
           >
             <motion.div
-              initial={shouldReduceMotion ? { opacity: 0 } : { scale: 0.85, rotate: -6, opacity: 0 }}
-              animate={shouldReduceMotion ? { opacity: 1 } : { scale: 1, rotate: -2, opacity: 1 }}
-              exit={shouldReduceMotion ? { opacity: 0 } : { scale: 0.85, rotate: 4, opacity: 0 }}
+              initial={shouldReduceMotion ? { opacity: 0 } : { scale: 0.9, opacity: 0 }}
+              animate={shouldReduceMotion ? { opacity: 1 } : { scale: 1, opacity: 1 }}
+              exit={shouldReduceMotion ? { opacity: 0 } : { scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative bg-white p-3 pb-10 rounded shadow-2xl max-w-md w-full"
+              className="relative bg-[#fffdf7] p-3 border-4 border-[#2b1b17] shadow-[8px_8px_0_#2b1b17] w-fit max-w-[90vw] sm:max-w-md mx-auto flex items-center justify-center"
             >
               <button
                 type="button"
                 onClick={() => setPolaroidUrl(null)}
-                className="absolute -top-3 -right-3 bg-[#8b0000] text-white rounded-full p-1.5 shadow"
+                className="absolute -top-3 -right-3 bg-[#b91c1c] text-white border-2 border-[#2b1b17] p-1.5"
               >
                 <X size={16} />
               </button>
               <img
                 src={polaroidUrl}
                 alt="Attachment"
-                className="w-full max-h-[70vh] object-contain rounded-sm"
+                className="block mx-auto max-w-full max-h-[75vh] object-contain"
               />
             </motion.div>
           </motion.div>

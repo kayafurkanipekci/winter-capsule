@@ -1,47 +1,51 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
 
-export default function SnowEffect() {
-  const [snowflakes, setSnowflakes] = useState<{ id: number; left: string; duration: number; delay: number }[]>([]);
+interface Flake {
+  id: number;
+  left: string;
+  size: number;
+  duration: number;
+  delay: number;
+}
 
-  // Wait for client mount before generating snowflakes
+export default function SnowEffect() {
+  const shouldReduceMotion = useReducedMotion();
+  const [snowflakes, setSnowflakes] = useState<Flake[]>([]);
+
   useEffect(() => {
-    const flakes = Array.from({ length: 50 }, (_, i) => ({
+    const flakes: Flake[] = Array.from({ length: 42 }, (_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
+      size: i % 3 === 0 ? 8 : i % 2 === 0 ? 6 : 4,
       duration: Math.random() * 10 + 10,
       delay: Math.random() * 10,
     }));
     setSnowflakes(flakes);
   }, []);
 
-  // Render nothing during SSR
-  if (snowflakes.length === 0) return null;
+  if (snowflakes.length === 0 || shouldReduceMotion) return null;
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+    <div className="fixed inset-0 pointer-events-none z-10 overflow-hidden">
       {snowflakes.map((flake) => (
         <motion.div
           key={flake.id}
-          initial={{
-            y: -20, // Start just above the viewport
-            opacity: 0,
-          }}
-          animate={{
-            y: "110vh", // Fall past the bottom of the viewport
-            opacity: [0, 1, 0.5, 0], // Fade in, shimmer, fade out
-          }}
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: "110vh", opacity: [0, 0.9, 0.6, 0] }}
           transition={{
-            duration: flake.duration, // 10-20 seconds for a calm pace
+            duration: flake.duration,
             repeat: Infinity,
-            delay: flake.delay, // Randomize start offset
+            delay: flake.delay,
             ease: "linear",
           }}
-          className="absolute w-1.5 h-1.5 bg-blue-400 rounded-full blur-[1px] shadow-[0_0_6px_rgba(100,150,255,0.9)]"
+          className="absolute bg-sky-300/80 dark:bg-sky-100/75 border border-sky-400/30 dark:border-white/30"
           style={{
-            left: flake.left, // Random horizontal position
+            left: flake.left,
+            width: `${flake.size}px`,
+            height: `${flake.size}px`,
           }}
         />
       ))}

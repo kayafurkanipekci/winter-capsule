@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import SnowEffect from "@/components/SnowEffect";
+import PixelSprite from "@/components/PixelSprite";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -76,7 +77,6 @@ export default function CreateBox() {
       setShowSuccessDrawer(true);
       setLoading(false);
 
-      // Attempt auto-copy; browsers may block async clipboard writes without a fresh gesture
       navigator.clipboard
         .writeText(link)
         .then(() => {
@@ -110,82 +110,83 @@ export default function CreateBox() {
       <SnowEffect />
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.94 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="z-10 w-full max-w-md bg-[#f4e4bc] p-8 rounded shadow-[0_0_50px_rgba(0,0,0,0.5)] relative"
+        className="z-10 w-full max-w-md pixel-panel p-6 sm:p-8 relative"
       >
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#8b0000] to-transparent opacity-50"></div>
-
-        <h1 className="font-cinzel text-3xl text-[#3e2723] text-center mb-2 font-bold">
-          {t.create.title}
-        </h1>
-        <p className="text-center font-merriweather text-[#5d4037] text-sm mb-8 italic">
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <PixelSprite name="gift_box" width={36} height={36} />
+          <h1 className="font-cinzel text-2xl sm:text-3xl text-[#2b1b17] font-bold">
+            {t.create.title}
+          </h1>
+          <PixelSprite name="holly" width={28} height={21} />
+        </div>
+        <p className="text-center font-merriweather text-[#5d4037] text-sm mb-6">
           {t.create.subtitle}
         </p>
 
-        <div className="space-y-6">
+        <div className="space-y-5">
           <div>
-            <label className="block font-cinzel text-[#3e2723] text-sm mb-1">{t.create.fullNameLabel}</label>
+            <label className="block font-cinzel font-bold text-[#2b1b17] text-sm mb-1">{t.create.fullNameLabel}</label>
             <input
               type="text"
               placeholder={t.create.fullNamePlaceholder}
               maxLength={60}
-              className="w-full bg-[#e6d5aa]/50 border-b-2 border-[#8b7355] p-2 outline-none text-[#3e2723] font-merriweather focus:border-[#8b0000] transition-colors placeholder-[#8b7355]/50"
+              className="w-full pixel-inset p-2.5 outline-none text-[#2b1b17] font-merriweather focus:border-[#b91c1c] transition-colors placeholder-[#8b7355]/60"
               value={formData.fullName}
               onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
             />
           </div>
 
           <div>
-            <label className="block font-cinzel text-[#3e2723] text-sm mb-1">{t.create.usernameLabel}</label>
+            <label className="block font-cinzel font-bold text-[#2b1b17] text-sm mb-1">{t.create.usernameLabel}</label>
             <input
               type="text"
               placeholder={t.create.usernamePlaceholder}
               maxLength={24}
-              className="w-full bg-[#e6d5aa]/50 border-b-2 border-[#8b7355] p-2 outline-none text-[#3e2723] font-merriweather focus:border-[#8b0000] transition-colors placeholder-[#8b7355]/50"
+              className="w-full pixel-inset p-2.5 outline-none text-[#2b1b17] font-merriweather focus:border-[#b91c1c] transition-colors placeholder-[#8b7355]/60"
               value={formData.username}
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
             />
           </div>
 
           <div>
-            <label className="block font-cinzel text-[#3e2723] text-sm mb-1">{t.create.pinLabel}</label>
+            <label className="block font-cinzel font-bold text-[#2b1b17] text-sm mb-1">{t.create.pinLabel}</label>
             <input
               type="text"
               inputMode="numeric"
               maxLength={4}
               placeholder="****"
-              className="w-full bg-[#e6d5aa]/50 border-b-2 border-[#8b7355] p-2 outline-none text-[#3e2723] font-merriweather tracking-[1em] text-center focus:border-[#8b0000] transition-colors placeholder-[#8b7355]/50"
+              className="w-full pixel-inset p-2.5 outline-none text-[#2b1b17] font-merriweather tracking-[1em] text-center font-bold focus:border-[#b91c1c] transition-colors placeholder-[#8b7355]/50"
               style={{ WebkitTextSecurity: "disc" } as React.CSSProperties}
               value={formData.pin}
               onChange={(e) => setFormData({ ...formData, pin: e.target.value.replace(/[^0-9]/g, "") })}
             />
           </div>
 
-          {/* Owner wrong-guess notification switch (default OFF) */}
-          <label className="flex items-center justify-between gap-3 pt-1 cursor-pointer select-none">
-            <span className="font-merriweather text-xs text-[#3e2723]">
+          <label className="flex items-center justify-between gap-3 pt-1 cursor-pointer select-none pixel-inset p-3">
+            <span className="font-merriweather text-xs text-[#2b1b17]">
               {t.create.showWrongGuessLabel}
             </span>
             <input
               type="checkbox"
               checked={formData.showWrongGuess}
               onChange={(e) => setFormData({ ...formData, showWrongGuess: e.target.checked })}
-              className="w-4 h-4 accent-[#8b0000] shrink-0"
+              className="w-4 h-4 accent-[#b91c1c] shrink-0"
             />
           </label>
 
           <button
             onClick={handleCreate}
             disabled={loading}
-            className="w-full py-3 bg-[#3e2723] text-[#f4e4bc] font-cinzel font-bold tracking-wider rounded shadow hover:bg-[#5d4037] disabled:opacity-50 transition-all mt-4"
+            className="w-full py-3.5 pixel-btn pixel-btn-red font-cinzel font-bold tracking-wider disabled:opacity-50 mt-2"
           >
             {loading ? t.create.creating : t.create.createButton}
           </button>
         </div>
 
-        <div className="mt-4 text-center">
-          <Link href="/" className="text-[#8b7355] text-xs hover:text-[#5d4037] font-cinzel">
+        <div className="mt-5 text-center">
+          <Link href="/" className="text-[#5d4037] text-xs hover:text-[#2b1b17] font-cinzel font-bold">
             ← {t.create.backHome}
           </Link>
         </div>
@@ -198,7 +199,7 @@ export default function CreateBox() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
+              className="fixed inset-0 bg-black/65 z-40 backdrop-blur-sm"
               onClick={() => setShowSuccessDrawer(false)}
             />
 
@@ -207,16 +208,17 @@ export default function CreateBox() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-[#f4e4bc] rounded-t-3xl p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] border-t-4 border-[#8b0000]"
+              className="fixed bottom-0 left-0 right-0 z-50 pixel-panel p-6 max-w-lg mx-auto"
             >
-              <div className="w-12 h-1 bg-[#8b7355]/30 rounded-full mx-auto mb-6"></div>
+              <div className="w-12 h-1.5 bg-[#8b7355]/40 mx-auto mb-5"></div>
 
-              <div className="text-center space-y-4 max-w-lg mx-auto">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2 text-green-600">
-                  <Check size={32} />
+              <div className="text-center space-y-4">
+                <div className="flex items-center justify-center gap-3">
+                  <PixelSprite name="gift_box" width={44} height={44} />
+                  <PixelSprite name="santa_cat" width={48} height={48} />
                 </div>
 
-                <h2 className="font-cinzel text-2xl text-[#3e2723] font-bold">{t.create.success.title}</h2>
+                <h2 className="font-cinzel text-2xl text-[#2b1b17] font-bold">{t.create.success.title}</h2>
                 <p className="font-merriweather text-[#5d4037] text-sm">
                   {t.create.success.descriptionLine1}<br />
                   {t.create.success.descriptionLine2}
@@ -224,18 +226,18 @@ export default function CreateBox() {
 
                 <div
                   onClick={handleManualCopy}
-                  className="bg-[#e6d5aa]/70 border border-[#8b7355]/40 rounded-lg p-3 flex items-center justify-between gap-3 cursor-pointer active:scale-[0.99] transition-transform"
+                  className="pixel-inset p-3 flex items-center justify-between gap-3 cursor-pointer active:scale-[0.99] transition-transform"
                 >
-                  <span className="font-mono text-xs text-[#3e2723] truncate">{createdLink}</span>
-                  <span className="inline-flex items-center gap-1 text-xs font-cinzel font-bold text-[#8b0000] shrink-0">
+                  <span className="font-mono text-xs text-[#2b1b17] truncate">{createdLink}</span>
+                  <span className="inline-flex items-center gap-1 text-xs font-cinzel font-bold text-[#b91c1c] shrink-0">
                     {copied ? <Check size={16} /> : <Copy size={16} />}
                     {copied ? t.create.success.copied : t.create.success.copyLink}
                   </span>
                 </div>
 
-                <div className="bg-[#e6d5aa]/60 border border-[#8b7355]/30 rounded-lg p-3 text-left text-xs font-merriweather text-[#3e2723]">
+                <div className="pixel-inset p-2.5 text-left text-xs font-merriweather text-[#2b1b17]">
                   <p className="flex items-center gap-2">
-                    <Info size={14} className="shrink-0 text-[#8b0000]" />
+                    <Info size={14} className="shrink-0 text-[#b91c1c]" />
                     <span>{t.create.success.minFourNotice}</span>
                   </p>
                 </div>
@@ -243,20 +245,20 @@ export default function CreateBox() {
                 <div className="flex flex-col gap-3">
                   <button
                     onClick={() => setShowShareDrawer(true)}
-                    className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-cinzel font-bold rounded shadow-lg hover:scale-[1.02] transition-transform flex items-center justify-center gap-2"
+                    className="w-full py-3 pixel-btn pixel-btn-red font-cinzel font-bold flex items-center justify-center gap-2"
                   >
-                    <Share2 size={20} />
+                    <Share2 size={18} />
                     {t.create.success.shareInvite}
                   </button>
 
                   <button
                     onClick={goToBox}
-                    className="w-full py-3 bg-[#3e2723] text-[#f4e4bc] font-cinzel font-bold rounded shadow hover:bg-[#5d4037] transition-all"
+                    className="w-full py-3 pixel-btn pixel-btn-wood font-cinzel font-bold"
                   >
                     {t.create.success.goToBox}
                   </button>
 
-                  <div className="mt-2">
+                  <div className="pt-1">
                     <CalendarReminder />
                   </div>
                 </div>

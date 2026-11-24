@@ -63,7 +63,7 @@ export async function GET(
           isSelf: s.owner_id === user.id,
         };
       })
-      .sort((a, b) => b.percent - a.percent);
+      .sort((a, b) => b.percent - a.percent || a.fullName.localeCompare(b.fullName, "tr"));
 
     return NextResponse.json({ entries });
   } catch (err) {

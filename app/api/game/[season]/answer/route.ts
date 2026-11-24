@@ -57,36 +57,49 @@ export async function POST(
       return NextResponse.json({ error: "not_current_card" }, { status: 409 });
     }
 
-    const remainingBeforeThis = allCards.filter(
-      (c) => c.status === "pending" && c.id !== currentCard.id
-    ).length;
-
-    let nextStatus: "guessed" | "passed";
-    let guessedCardId: string | null = null;
-    let points: number;
+    const pendingCards = allCards.filter((c) => c.status === "pending");
+    const maxPosition = allCards.reduce((max, c) => Math.max(max, c.position), -1);
 
     if (action === "pass") {
-      if (remainingBeforeThis === 0) {
+      if (pendingCards.length <= 1) {
         return NextResponse.json({ error: "pass_not_allowed_on_last_card" }, { status: 400 });
       }
-      nextStatus = "passed";
-      points = calculateCardPoints("passed", currentCard.revealed_count, false);
-    } else {
-      const targetCard = allCards.find((c) => c.name_key === nameKey);
-      if (!targetCard) {
-        return NextResponse.json({ error: "invalid_name_key" }, { status: 400 });
+
+      const nextPoints = (currentCard.points ?? 0) - 1;
+      const { data: movedCard, error: moveErr } = await supabase
+        .from("game_cards")
+        .update({
+          position: maxPosition + 1,
+          points: nextPoints,
+        })
+        .eq("id", currentCard.id)
+        .eq("status", "pending")
+        .select("id")
+        .maybeSingle();
+
+      if (moveErr || !movedCard) {
+        return NextResponse.json({ error: "server_error" }, { status: 500 });
       }
 
-      const alreadyUsed = allCards.some((c) => c.guessed_card_id === targetCard.id);
-      if (alreadyUsed) {
-        return NextResponse.json({ error: "name_already_used" }, { status: 409 });
-      }
-
-      nextStatus = "guessed";
-      guessedCardId = targetCard.id;
-      const isCorrect = targetCard.id === currentCard.id;
-      points = calculateCardPoints("guessed", currentCard.revealed_count, isCorrect);
+      return NextResponse.json({ ok: true, finished: false });
     }
+
+    const targetCard = allCards.find((c) => c.name_key === nameKey);
+    if (!targetCard) {
+      return NextResponse.json({ error: "invalid_name_key" }, { status: 400 });
+    }
+
+    const alreadyUsed = allCards.some((c) => c.guessed_card_id === targetCard.id);
+    if (alreadyUsed) {
+      return NextResponse.json({ error: "name_already_used" }, { status: 409 });
+    }
+
+    const nextStatus = "guessed" as const;
+    const guessedCardId = targetCard.id;
+    const isCorrect = targetCard.id === currentCard.id;
+    const points =
+      (currentCard.points ?? 0) +
+      calculateCardPoints("guessed", currentCard.revealed_count, isCorrect);
 
     // Conditional update guarantees idempotency against double-submit
     const { data: updatedCard, error: updateErr } = await supabase

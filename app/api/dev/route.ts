@@ -214,6 +214,7 @@ export async function POST(request: Request) {
             season: activeSeason,
             mode: "game",
             status: "in_progress",
+            share_in_circle: true,
           })
           .select("id")
           .single();

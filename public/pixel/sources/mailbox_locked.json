@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "name": "mailbox_locked",
+  "canvas": [
+    28,
+    36
+  ],
+  "pivot": [
+    14,
+    36
+  ],
+  "palette": {
+    "o": "#2b1b17",
+    "w": "#5d4037",
+    "p": "#f4e4bc",
+    "q": "#e6d5aa",
+    "s": "#fffdf7",
+    "i": "#cfe8ff",
+    "r": "#b91c1c",
+    "d": "#7f1d1d",
+    "g": "#1b4332",
+    "l": "#2d6a4f",
+    "y": "#fbbf24",
+    "z": "#d97706",
+    "c": "#f97316",
+    "k": "#e11d48",
+    "m": "#71717a",
+    "n": "#3f3f46",
+    "h": "#d4d4d8"
+  },
+  "frames": [
+    {
+      "name": "mailbox_locked",
+      "duration_ms": 400,
+      "rows": [
+        "............................",
+        "......oooooooooooooooo......",
+        ".....osssssssssssssssso.....",
+        "....osssiiiiiiiiiiiiisso....",
+        "...oommmmmmmmmmmmmmmmmmoo...",
+        "...omhhhhhhhhhhhhhhhhhhmo...",
+        "...ommmmmmmmmmmmmmmmmmmmo...",
+        "...ommmmmmmmooooommmmmmmo...",
+        "...ommmmmmmooooooommmmmmo...",
+        "...ommmmmmmoo...oommorrmo...",
+        "...ommmmmmmooooooommorrmo...",
+        "...ommmmmmmoyyyyyommorrmo...",
+        "...ommmmmmmoyyyzyomooono....",
+        "...ommmmmmmoyyozyommmmmmo...",
+        "...ommmmmmmoyyyzyommmmmmo...",
+        "...omnnnnnnooooooonnnnnmo...",
+        "...oooooooooooooooooooooo...",
+        "...........owwwo............",
+        "...........owwwo............",
+        "...........owwwo............",
+        "...........owwwo............",
+        "...........owwwo............",
+        "...........owwwo............",
+        "...........owwwo............",
+        "...........owwwo............",
+        "...........owwwo............",
+        "...........owwwo............",
+        "...........owwwo............",
+        "......ooooowwwwooooo........",
+        ".....osssssssssssssso.......",
+        "....iiiiiiiiiiiiiiiiii......",
+        "............................",
+        "............................",
+        "............................",
+        "............................",
+        "............................"
+      ]
+    }
+  ]
+}

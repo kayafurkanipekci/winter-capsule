@@ -1,0 +1,30 @@
+{
+  "format": "pixel-art-studio-atlas-v1",
+  "name": "pine_tree",
+  "image": "atlas.png",
+  "canvas": [
+    24,
+    32
+  ],
+  "size": [
+    24,
+    32
+  ],
+  "padding": 0,
+  "frames": [
+    {
+      "name": "pine_tree",
+      "rect": [
+        0,
+        0,
+        24,
+        32
+      ],
+      "duration_ms": 400,
+      "pivot": [
+        12,
+        32
+      ]
+    }
+  ]
+}

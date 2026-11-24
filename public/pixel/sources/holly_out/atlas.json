@@ -1,0 +1,30 @@
+{
+  "format": "pixel-art-studio-atlas-v1",
+  "name": "holly",
+  "image": "atlas.png",
+  "canvas": [
+    16,
+    12
+  ],
+  "size": [
+    16,
+    12
+  ],
+  "padding": 0,
+  "frames": [
+    {
+      "name": "holly",
+      "rect": [
+        0,
+        0,
+        16,
+        12
+      ],
+      "duration_ms": 400,
+      "pivot": [
+        8,
+        12
+      ]
+    }
+  ]
+}

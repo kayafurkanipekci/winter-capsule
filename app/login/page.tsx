@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import SnowEffect from "@/components/SnowEffect";
+import PixelSprite from "@/components/PixelSprite";
 import { Copy, Check, HelpCircle } from "lucide-react";
 import { useI18n } from "@/lib/i18n/context";
 
@@ -83,18 +84,21 @@ export default function LoginPage() {
       <SnowEffect />
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.94 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="z-10 w-full max-w-md bg-[#f4e4bc] p-8 rounded shadow-2xl border-4 border-[#3e2723]"
+        className="z-10 w-full max-w-md pixel-panel p-6 sm:p-8"
       >
-        <h1 className="font-cinzel text-3xl text-[#3e2723] text-center font-bold mb-2">{t.login.title}</h1>
-        <p className="text-center font-merriweather text-[#5d4037] opacity-80 mb-6 italic text-sm">
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <PixelSprite name="santa_cat" width={40} height={40} />
+          <h1 className="font-cinzel text-3xl text-[#2b1b17] font-bold">{t.login.title}</h1>
+        </div>
+        <p className="text-center font-merriweather text-[#5d4037] mb-6 text-sm">
           {t.login.subtitle}
         </p>
 
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form onSubmit={handleLogin} className="space-y-5">
           <div>
-            <label htmlFor="username" className="block font-cinzel text-[#3e2723] font-bold mb-2">
+            <label htmlFor="username" className="block font-cinzel text-[#2b1b17] font-bold text-sm mb-1.5">
               {t.login.usernameLabel}
             </label>
             <input
@@ -106,13 +110,13 @@ export default function LoginPage() {
                 setError("");
               }}
               placeholder={t.login.usernamePlaceholder}
-              className="w-full bg-[#e6d5aa]/50 border-b-2 border-[#8b7355] p-3 text-[#3e2723] text-lg font-merriweather outline-none focus:border-[#8b0000] placeholder-amber-900/30"
+              className="w-full pixel-inset p-2.5 text-[#2b1b17] text-base font-merriweather outline-none focus:border-[#b91c1c] placeholder-[#8b7355]/60"
               required
             />
           </div>
 
           <div>
-            <label htmlFor="pin" className="block font-cinzel text-[#3e2723] font-bold mb-2">
+            <label htmlFor="pin" className="block font-cinzel text-[#2b1b17] font-bold text-sm mb-1.5">
               {t.login.pinLabel}
             </label>
             <input
@@ -127,17 +131,17 @@ export default function LoginPage() {
               }}
               placeholder="****"
               style={{ WebkitTextSecurity: "disc" } as React.CSSProperties}
-              className="w-full bg-[#e6d5aa]/50 border-b-2 border-[#8b7355] p-3 text-center text-2xl tracking-[1em] text-[#3e2723] font-bold outline-none focus:border-[#8b0000] placeholder-amber-900/20"
+              className="w-full pixel-inset p-2.5 text-center text-2xl tracking-[1em] text-[#2b1b17] font-bold outline-none focus:border-[#b91c1c] placeholder-[#8b7355]/40"
               required
             />
           </div>
 
-          {error && <p className="text-red-800 font-bold text-sm text-center">{error}</p>}
+          {error && <p className="text-[#b91c1c] font-bold text-sm text-center">{error}</p>}
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-4 bg-[#3e2723] text-amber-100 font-cinzel font-bold text-lg rounded hover:bg-[#5d4037] transition-all shadow-lg active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full py-3.5 pixel-btn pixel-btn-wood font-cinzel font-bold text-base disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {isLoading ? t.login.checking : t.login.submit}
           </button>
@@ -149,24 +153,24 @@ export default function LoginPage() {
             setNotFoundMode(false);
             setShowHelpDrawer(true);
           }}
-          className="mt-4 text-[#8b7355] text-xs font-merriweather hover:text-[#5d4037] flex items-center justify-center gap-1 w-full"
+          className="mt-4 text-[#5d4037] text-xs font-merriweather hover:text-[#2b1b17] flex items-center justify-center gap-1 w-full"
         >
           <HelpCircle size={12} />
           {t.login.forgotPin}
         </button>
 
-        <div className="mt-6 text-center pt-4 border-t border-[#8b7355]/20">
+        <div className="mt-6 text-center pt-4 border-t-2 border-[#8b7355]/30">
           <p className="text-[#5d4037] text-sm mb-2 font-merriweather">{t.login.noBoxYet}</p>
           <Link
             href="/create"
-            className="text-[#8b0000] font-bold hover:underline font-cinzel text-sm"
+            className="text-[#b91c1c] font-bold hover:underline font-cinzel text-sm"
           >
             {t.login.createFree}
           </Link>
         </div>
 
         <div className="mt-4 text-center">
-          <Link href="/" className="text-[#8b7355] text-xs hover:text-[#5d4037] font-cinzel">
+          <Link href="/" className="text-[#5d4037] text-xs hover:text-[#2b1b17] font-cinzel font-bold">
             ← {t.login.backHome}
           </Link>
         </div>
@@ -179,7 +183,7 @@ export default function LoginPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
+              className="fixed inset-0 bg-black/65 z-40 backdrop-blur-sm"
               onClick={() => setShowHelpDrawer(false)}
             />
             <motion.div
@@ -187,13 +191,13 @@ export default function LoginPage() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-[#f4e4bc] rounded-t-3xl p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] border-t-4 border-[#8b0000] max-w-lg mx-auto"
+              className="fixed bottom-0 left-0 right-0 z-50 pixel-panel p-6 max-w-lg mx-auto"
             >
-              <div className="w-12 h-1 bg-[#8b7355]/30 rounded-full mx-auto mb-6"></div>
+              <div className="w-12 h-1.5 bg-[#8b7355]/40 mx-auto mb-5"></div>
 
               <div className="text-center space-y-4">
-                <HelpCircle size={40} className="mx-auto mb-2 text-[#8b0000]" />
-                <h3 className="font-cinzel text-xl text-[#3e2723] font-bold">
+                <PixelSprite name="bell" width={36} height={36} className="mx-auto" />
+                <h3 className="font-cinzel text-xl text-[#2b1b17] font-bold">
                   {notFoundMode ? t.login.notFound.title : t.login.forgotPin}
                 </h3>
 
@@ -206,13 +210,13 @@ export default function LoginPage() {
                     <div className="flex flex-col gap-3 mt-4">
                       <Link
                         href="/create"
-                        className="w-full py-3 bg-[#8b0000] text-white font-cinzel font-bold rounded shadow hover:bg-[#a50000] transition-colors"
+                        className="w-full py-3 pixel-btn pixel-btn-red font-cinzel font-bold text-sm text-center"
                       >
                         {t.login.notFound.createNew}
                       </Link>
                       <button
                         onClick={() => setShowHelpDrawer(false)}
-                        className="w-full py-3 bg-[#3e2723] text-[#f4e4bc] font-cinzel font-bold rounded hover:bg-[#5d4037] transition-colors"
+                        className="w-full py-3 pixel-btn pixel-btn-wood font-cinzel font-bold text-sm"
                       >
                         {t.login.notFound.tryAgain}
                       </button>
@@ -222,10 +226,10 @@ export default function LoginPage() {
 
                 <div className="relative pt-4 mt-2">
                   <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                    <div className="w-full border-t border-[#8b7355]/20"></div>
+                    <div className="w-full border-t-2 border-[#8b7355]/30"></div>
                   </div>
                   <div className="relative flex justify-center">
-                    <span className="bg-[#f4e4bc] px-2 text-xs text-[#8b7355] font-cinzel">
+                    <span className="bg-[#f4e4bc] px-2 text-xs text-[#5d4037] font-cinzel font-bold">
                       {t.login.notFound.helpDivider}
                     </span>
                   </div>
@@ -241,15 +245,15 @@ export default function LoginPage() {
                     setEmailCopied(true);
                     setTimeout(() => setEmailCopied(false), 2000);
                   }}
-                  className="bg-[#e6d5aa]/50 p-3 rounded border border-[#8b7355]/30 flex items-center justify-between cursor-pointer active:scale-95 transition-transform"
+                  className="pixel-inset p-3 flex items-center justify-between cursor-pointer active:scale-95 transition-transform"
                 >
-                  <span className="font-mono text-[#3e2723] text-xs">{supportEmail}</span>
-                  <div className="text-[#8b0000]">
+                  <span className="font-mono text-[#2b1b17] text-xs">{supportEmail}</span>
+                  <div className="text-[#b91c1c]">
                     {emailCopied ? <Check size={16} /> : <Copy size={16} />}
                   </div>
                 </div>
                 {emailCopied && (
-                  <p className="text-green-700 text-[10px] font-bold animate-pulse">{t.login.notFound.copied}</p>
+                  <p className="text-[#1b4332] text-xs font-bold">{t.login.notFound.copied}</p>
                 )}
               </div>
             </motion.div>

@@ -1,0 +1,30 @@
+{
+  "format": "pixel-art-studio-atlas-v1",
+  "name": "snowman",
+  "image": "atlas.png",
+  "canvas": [
+    20,
+    24
+  ],
+  "size": [
+    20,
+    24
+  ],
+  "padding": 0,
+  "frames": [
+    {
+      "name": "snowman",
+      "rect": [
+        0,
+        0,
+        20,
+        24
+      ],
+      "duration_ms": 400,
+      "pivot": [
+        10,
+        24
+      ]
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import SnowEffect from "@/components/SnowEffect";
+import PixelSprite from "@/components/PixelSprite";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
@@ -16,56 +17,65 @@ export default function Home() {
       <SnowEffect />
 
       <AnimatePresence mode="wait">
-
         {/* 1. Intro Screen */}
         <motion.div
           key="home"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className="z-10 text-center space-y-8 max-w-2xl px-6"
+          className="z-10 text-center space-y-6 max-w-2xl px-4"
         >
-          <div className="relative">
-            <h1 className="font-cinzel text-5xl md:text-7xl font-bold text-[#3e2723] dark:text-amber-400 drop-shadow-[0_0_15px_rgba(62,39,35,0.2)] dark:drop-shadow-[0_0_15px_rgba(251,191,36,0.4)]">
-              {t.home.title}
-            </h1>
-            <div className="absolute -top-12 -right-8 text-6xl opacity-80 rotate-12"></div>
+          {/* Cute Pixel Christmas Characters Row */}
+          <div className="flex items-end justify-center gap-3 sm:gap-5 pt-4">
+            <PixelSprite name="pine_tree" width={54} height={72} className="drop-shadow-[3px_3px_0_rgba(43,27,23,0.45)]" />
+            <PixelSprite name="santa_cat" width={56} height={56} className="drop-shadow-[3px_3px_0_rgba(43,27,23,0.45)]" />
+            <PixelSprite name="gift_box" width={40} height={40} className="drop-shadow-[3px_3px_0_rgba(43,27,23,0.45)]" />
+            <PixelSprite name="snowman" width={50} height={60} className="drop-shadow-[3px_3px_0_rgba(43,27,23,0.45)]" />
           </div>
 
-          <p className="font-merriweather text-lg md:text-xl text-[#3e2723] dark:text-[#e8e4d9] opacity-90 italic leading-relaxed">
-            "{t.home.subtitle}<br />
-            <span className="text-[#8b0000] dark:text-amber-200/80 text-sm inline-flex items-center justify-center gap-1.5 mt-2 not-italic font-cinzel">
-              <AlertTriangle size={15} className="shrink-0" />
-              {t.home.warning}
-            </span>
-          </p>
+          <div className="pixel-panel p-6 sm:p-8 space-y-5">
+            <div className="flex items-center justify-center gap-3">
+              <PixelSprite name="holly" width={32} height={24} className="hidden sm:inline-block" />
+              <h1 className="font-cinzel text-4xl sm:text-6xl font-bold text-[#2b1b17] tracking-tight">
+                {t.home.title}
+              </h1>
+              <PixelSprite name="holly" width={32} height={24} className="hidden sm:inline-block" />
+            </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-12">
-            {/* Login Button */}
-            <Link
-              href="/login"
-              className="w-48 py-4 bg-[#3e2723] border border-[#5d4037] dark:border-amber-500/30 text-[#f4e4bc] dark:text-amber-100 rounded-lg font-cinzel text-lg hover:bg-[#5d4037] hover:scale-105 transition-all shadow-lg flex items-center justify-center gap-2"
-            >
-              <span></span> {t.home.login}
-            </Link>
+            <p className="font-merriweather text-base sm:text-lg text-[#5d4037] leading-relaxed">
+              "{t.home.subtitle}"
+              <span className="text-[#b91c1c] text-xs sm:text-sm inline-flex items-center justify-center gap-1.5 mt-2 w-full font-cinzel font-bold">
+                <AlertTriangle size={15} className="shrink-0" />
+                {t.home.warning}
+              </span>
+            </p>
 
-            {/* Register Button */}
-            <Link
-              href="/create"
-              className="w-48 py-4 bg-[#8b0000] border border-red-500/30 text-white rounded-lg font-cinzel text-lg hover:bg-[#a50000] hover:scale-105 transition-all shadow-[0_0_20px_rgba(139,0,0,0.4)] flex items-center justify-center gap-2"
-            >
-              <span></span> {t.home.register}
-            </Link>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-4 pt-2">
+              <Link
+                href="/login"
+                className="w-full sm:w-48 min-h-[52px] py-3 px-4 pixel-btn pixel-btn-wood font-cinzel text-base font-bold flex items-center justify-center"
+              >
+                {t.home.login}
+              </Link>
+
+              <Link
+                href="/create"
+                className="w-full sm:w-48 min-h-[52px] py-3 px-4 pixel-btn pixel-btn-red font-cinzel text-base font-bold flex items-center justify-center gap-2"
+              >
+                <PixelSprite name="envelope_sealed" width={20} height={14} />
+                {t.home.register}
+              </Link>
+            </div>
           </div>
 
-          <div className="pt-12 text-center opacity-70 dark:opacity-60">
-            <p suppressHydrationWarning className="font-cinzel text-xs text-[#5d4037] dark:text-amber-100/50 uppercase tracking-widest">
+          <div className="pt-2 flex items-center justify-center gap-2 opacity-85">
+            <PixelSprite name="bell" width={18} height={18} />
+            <p suppressHydrationWarning className="font-cinzel text-xs font-bold text-[#5d4037] dark:text-[#f4e4bc] uppercase tracking-widest">
               {t.home.lettersToYear(targetYear)}
             </p>
+            <PixelSprite name="bell" width={18} height={18} />
           </div>
-
         </motion.div>
-
       </AnimatePresence>
     </main>
   );

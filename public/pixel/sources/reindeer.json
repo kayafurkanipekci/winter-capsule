@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "name": "reindeer",
+  "canvas": [
+    32,
+    24
+  ],
+  "pivot": [
+    16,
+    24
+  ],
+  "palette": {
+    "o": "#2b1b17",
+    "a": "#d97706",
+    "u": "#92400e",
+    "b": "#a16207",
+    "s": "#78350f",
+    "t": "#fde68a",
+    "r": "#dc2626",
+    "c": "#991b1b",
+    "y": "#fbbf24",
+    "w": "#fffdf7"
+  },
+  "frames": [
+    {
+      "name": "reindeer",
+      "duration_ms": 400,
+      "rows": [
+        "................................",
+        "....................oo....oo....",
+        "...................oao...oao....",
+        "..................oaoo..oaoo....",
+        ".................oaaooooaao.....",
+        "..................ooaaaaoo......",
+        "...............ooo.ouuuuo.......",
+        "..............obboobbbbbo.......",
+        "...............oobbbbbbbbbo.....",
+        "................obbbbwobbbbo....",
+        "................obbbbbbbbbtro...",
+        "................obbbbbbbttrrro..",
+        "...............obbbbbbtttttto...",
+        ".............ooorrrrroooooo.....",
+        ".......ooo..orrrrrrcro..........",
+        "......otttoobbrrryybbbo.........",
+        "......ooobbbbbbbbbbbbbbo........",
+        ".......obbbbbbbbbbbbbbbbo.......",
+        ".......obbbbbttttttbbbbbo.......",
+        "........osssbttttttbssso........",
+        "........obbo........obbo........",
+        "........obbo........obbo........",
+        "........osso........osso........",
+        "........oooo........oooo........"
+      ]
+    }
+  ]
+}
