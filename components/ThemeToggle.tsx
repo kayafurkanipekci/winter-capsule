@@ -9,7 +9,7 @@ export default function ThemeToggle() {
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
-    // Hydration mismatch hatasını önlemek için
+    // Prevent hydration mismatch
     useEffect(() => {
         setMounted(true);
     }, []);
@@ -42,7 +42,7 @@ export default function ThemeToggle() {
                 )}
             </motion.div>
 
-            {/* Arka plan ikonları (sabit) */}
+            {/* Static background icons */}
             <Sun size={14} className="absolute left-2 top-2 text-white/50 z-0" />
             <Moon size={14} className="absolute right-2 top-2 text-amber-100/30 z-0" />
         </div>

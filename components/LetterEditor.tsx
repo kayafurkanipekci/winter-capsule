@@ -13,9 +13,9 @@ interface LetterEditorProps {
 export default function LetterEditor({ onSeal, onCancel }: LetterEditorProps) {
   const { t } = useI18n();
   const [message, setMessage] = useState("");
-  // Durumlar: 'writing' (yazıyor), 'folding' (katlanıyor), 'sealed' (mühürlendi), 'flying' (uçuyor)
+  // Statuses: 'writing', 'folding', 'sealed', 'flying'
   const [status, setStatus] = useState<"writing" | "folding" | "sealed" | "flying">("writing");
-  const [currentDay, setCurrentDay] = useState("25"); // Default server-side value/placeholder
+  const [currentDay, setCurrentDay] = useState("25"); // Default server-side placeholder
 
   useEffect(() => {
     setCurrentDay(new Date().getDate().toString());
@@ -24,20 +24,20 @@ export default function LetterEditor({ onSeal, onCancel }: LetterEditorProps) {
   const handleSealClick = () => {
     if (!message.trim()) return;
 
-    // 1. Önce katlama animasyonunu başlat
+    // 1. Start folding animation
     setStatus("folding");
 
-    // 2. 1.5 saniye sonra mühürle
+    // 2. Seal after 1.5s
     setTimeout(() => {
       setStatus("sealed");
     }, 1500);
 
-    // 3. 2.5 saniye sonra uçur
+    // 3. Fly away after 2.5s
     setTimeout(() => {
       setStatus("flying");
     }, 2500);
 
-    // 4. Animasyon bitince ana sayfaya haber ver (3.5 saniye sonra)
+    // 4. Notify parent after 3.5s
     setTimeout(() => {
       onSeal(message);
     }, 3500);
@@ -45,9 +45,7 @@ export default function LetterEditor({ onSeal, onCancel }: LetterEditorProps) {
 
   return (
     <div className="relative w-full h-[600px] flex items-center justify-center">
-      {/* AŞAMA 1: YAZMA MODU 
-          Kağıt açık, yazı yazılıyor.
-      */}
+      {/* Stage 1: Writing mode */}
       {status === "writing" && (
         <motion.div
           initial={{ scale: 0.8, opacity: 0, y: 50 }}
@@ -56,7 +54,7 @@ export default function LetterEditor({ onSeal, onCancel }: LetterEditorProps) {
           className="relative w-full max-w-lg"
         >
           <div className="bg-[#f4e4bc] p-8 rounded-sm shadow-2xl relative overflow-hidden transform rotate-1 min-h-[400px]">
-            {/* Kağıt Dokusu */}
+            {/* Paper texture */}
             <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(#8b7355_1px,transparent_1px)] [background-size:16px_16px]"></div>
 
             <div className="flex justify-between items-center mb-6 border-b border-[#8b7355]/30 pb-2">
@@ -93,24 +91,22 @@ export default function LetterEditor({ onSeal, onCancel }: LetterEditorProps) {
         </motion.div>
       )}
 
-      {/* AŞAMA 2, 3 ve 4: ZARF ANİMASYONU 
-          Kağıt gitti, yerine Zarf geldi.
-      */}
+      {/* Stages 2-4: Envelope animation */}
       {status !== "writing" && (
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={
             status === "flying"
-              ? { y: -800, opacity: 0, rotate: 10 } // Uçma efekti
-              : { scale: 1, opacity: 1, y: 0 } // Durma efekti
+              ? { y: -800, opacity: 0, rotate: 10 } // Fly away
+              : { scale: 1, opacity: 1, y: 0 } // Stay centered
           }
           transition={{ duration: 1, ease: "easeInOut" }}
           className="relative w-80 h-48 bg-[#f4e4bc] shadow-2xl flex items-center justify-center z-50"
         >
-          {/* Zarfın Arka Kapağı (Üçgen katlamalar) */}
+          {/* Envelope back folds */}
           <div className="absolute inset-0 border-[10px] border-[#e6d5aa] border-t-0 border-l-[160px] border-r-[160px] border-b-[96px] border-l-transparent border-r-transparent border-t-transparent"></div>
 
-          {/* Zarfın Üst Kapağı (Kapanma Animasyonu) */}
+          {/* Envelope top flap */}
           <motion.div
             initial={{ rotateX: 180, transformOrigin: "top" }}
             animate={{ rotateX: 0 }}
@@ -118,7 +114,7 @@ export default function LetterEditor({ onSeal, onCancel }: LetterEditorProps) {
             className="absolute top-0 left-0 w-full h-full border-t-[96px] border-l-[160px] border-r-[160px] border-[#d4c39b] border-l-transparent border-r-transparent border-b-transparent z-10"
           />
 
-          {/* Kırmızı Mühür (Ortaya Çıkma Animasyonu) */}
+          {/* Red wax seal */}
           {status !== "folding" && (
             <motion.div
               initial={{ scale: 0, opacity: 0 }}

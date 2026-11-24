@@ -38,14 +38,14 @@ export default function ShareDrawer({ isOpen, onClose, username }: ShareDrawerPr
         setIsGenerating(true);
         try {
             if (storyRef.current) {
-                // 1. Görseli oluştur
+                // 1. Render story image
                 const dataUrl = await toPng(storyRef.current, { cacheBust: true, pixelRatio: 2 });
 
-                // 2. Blob'a çevir
+                // 2. Convert to Blob
                 const blob = await (await fetch(dataUrl)).blob();
                 const file = new File([blob], "time-capsule-story.png", { type: "image/png" });
 
-                // 3. Native Share dene
+                // 3. Try native share
                 if (navigator.share) {
                     await navigator.share({
                         title: t.shareDrawer.shareTitle,
@@ -54,7 +54,7 @@ export default function ShareDrawer({ isOpen, onClose, username }: ShareDrawerPr
                         files: [file]
                     });
                 } else {
-                    // Desteklemiyorsa (Desktop) indir
+                    // Fallback to direct download on desktop
                     const link = document.createElement('a');
                     link.download = t.shareDrawer.downloadFilename;
                     link.href = dataUrl;
@@ -62,8 +62,8 @@ export default function ShareDrawer({ isOpen, onClose, username }: ShareDrawerPr
                 }
             }
         } catch (err) {
-            console.error("Paylaşım hatası:", err);
-            // Hata olursa düz link paylaşmayı dene
+            console.error("Share error:", err);
+            // Fallback to sharing plain URL
             if (navigator.share) {
                 navigator.share({ title: t.shareDrawer.shareTitle, text: shareText, url: shareUrl });
             } else {
@@ -112,7 +112,7 @@ export default function ShareDrawer({ isOpen, onClose, username }: ShareDrawerPr
                             </button>
                         </div>
 
-                        {/* 1. HİKAYE PAYLAŞ BUTONU */}
+                        {/* 1. Story Share Button */}
                         <div className="mb-8">
                             <button
                                 onClick={handleNativeShare}
@@ -133,7 +133,7 @@ export default function ShareDrawer({ isOpen, onClose, username }: ShareDrawerPr
                         </div>
 
 
-                        {/* 2. DİĞER SOSYAL LİNKLER */}
+                        {/* 2. Other Social Links */}
                         <div className="grid grid-cols-2 gap-3 mb-6">
                             {socialLinks.map((social) => (
                                 <a
@@ -149,7 +149,7 @@ export default function ShareDrawer({ isOpen, onClose, username }: ShareDrawerPr
                             ))}
                         </div>
 
-                        {/* 3. LİNK KOPYALA */}
+                        {/* 3. Copy Link */}
                         <div
                             onClick={handleCopy}
                             className="bg-[#e6d5aa]/50 p-4 rounded-lg border border-[#8b7355]/30 flex items-center justify-between cursor-pointer active:scale-95 transition-transform"
@@ -166,17 +166,17 @@ export default function ShareDrawer({ isOpen, onClose, username }: ShareDrawerPr
                         </div>
 
 
-                        {/* --- GİZLİ HİKAYE ŞABLONU (Ekranda görünmez, sadece resim üretilirken kullanılır) --- */}
+                        {/* Hidden Story Template (off-screen, used only for image generation) */}
                         <div className="fixed -left-[9999px] top-0">
                             <div
                                 ref={storyRef}
                                 className="w-[1080px] h-[1920px] bg-[#0a0f0d] flex flex-col items-center justify-center relative overflow-hidden"
-                                style={{ fontFamily: 'serif' }} // Font yüklenmediyse native serif kullan
+                                style={{ fontFamily: 'serif' }} // Fallback to native serif if custom font is not loaded
                             >
-                                {/* Arkaplan Efekti */}
+                                {/* Background Gradient */}
                                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-amber-900/40 via-[#0a0f0d] to-[#0a0f0d]"></div>
 
-                                {/* Kar Efekti (Statik Resim) */}
+                                {/* Static Snowflakes */}
                                 {[...Array(30)].map((_, i) => (
                                     <div
                                         key={i}

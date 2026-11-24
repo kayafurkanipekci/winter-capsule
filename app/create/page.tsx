@@ -1,96 +1,84 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
 import SnowEffect from "@/components/SnowEffect";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Copy, Check, Share2 } from "lucide-react";
+import { Check, Share2, Info } from "lucide-react";
 import ShareDrawer from "@/components/ShareDrawer";
 import CalendarReminder from "@/components/CalendarReminder";
-
 import WarningPopup from "@/components/WarningPopup";
 import { useI18n } from "@/lib/i18n/context";
 
 export default function CreateBox() {
   const { t } = useI18n();
   const router = useRouter();
-  const [formData, setFormData] = useState({ username: "", pin: "" });
+  const [formData, setFormData] = useState({ fullName: "", username: "", pin: "" });
   const [loading, setLoading] = useState(false);
   const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
-  const [createdLink, setCreatedLink] = useState("");
-  const [isCopied, setIsCopied] = useState(false);
+  const [createdUsername, setCreatedUsername] = useState("");
   const [showShareDrawer, setShowShareDrawer] = useState(false);
-  const [showWarning, setShowWarning] = useState(false);
+  const [warningMessage, setWarningMessage] = useState("");
 
   const handleCreate = async () => {
-    // Basit kontroller
-    if (!formData.username || formData.pin.length < 4) {
-      alert(t.create.errors.invalidInput);
+    if (!formData.fullName.trim() || !formData.username.trim() || formData.pin.length < 4) {
+      setWarningMessage(t.create.errors.invalidInput);
       return;
     }
 
-    // Boşluk kontrolü
-    if (/\s/.test(formData.username)) {
-      setShowWarning(true);
+    if (/\s/.test(formData.username.trim())) {
+      setWarningMessage(t.create.warningNoSpaces);
       return;
     }
 
     setLoading(true);
 
-    // Boşluk kontrolü yapıldığı için trim yeterli
-    const finalUsername = formData.username.trim();
-
     try {
-      // 2. Veritabanına kaydet
-      const { error } = await supabase
-        .from("users")
-        .insert([{ username: finalUsername, pin: formData.pin }]);
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          username: formData.username.trim(),
+          pin: formData.pin,
+        }),
+      });
 
-      if (error) {
-        if (error.code === "23505") {
-          alert(t.create.errors.usernameTaken);
-        } else {
-          alert(t.create.errors.genericError);
-          console.error(error);
-        }
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        const errorMap: Record<string, string> = {
+          full_name_invalid: t.create.errors.fullNameInvalid,
+          username_has_spaces: t.create.warningNoSpaces,
+          username_invalid: t.create.errors.usernameInvalid,
+          username_reserved: t.create.errors.usernameReserved,
+          username_taken: t.create.errors.usernameTaken,
+          pin_invalid: t.create.errors.pinInvalid,
+        };
+        setWarningMessage(errorMap[data.error] ?? t.create.errors.genericError);
         setLoading(false);
         return;
       }
 
-      // 3. Başarılı!
+      const finalUsername: string = data.user.username;
       const link = `${window.location.origin}/${finalUsername}`;
-      setCreatedLink(link);
+      setCreatedUsername(finalUsername);
       setShowSuccessDrawer(true);
       setLoading(false);
 
-      // Otomatik kopyala
-      navigator.clipboard.writeText(link).then(() => {
-        setIsCopied(true);
-        // 3 saniye sonra bildirimi kaldır
-        setTimeout(() => setIsCopied(false), 3000);
-      }).catch(err => console.error("Kopyalama hatası:", err));
-
-    } catch (e) {
-      console.error(e);
+      navigator.clipboard.writeText(link).catch((err) => {
+        console.error("Copy failed:", err);
+      });
+    } catch (err) {
+      console.error("Create error:", err);
+      setWarningMessage(t.create.errors.genericError);
       setLoading(false);
     }
   };
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(createdLink).then(() => {
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 3000);
-    });
-  };
-
   const goToBox = () => {
-    // finalUsername state'te yok ama formData'dan alabiliriz veya linkten parse edebiliriz.
-    // Link zaten origin + /username formatında.
-    // Dashboard'a gitmek için: /dashboard/username
-    const username = createdLink.split('/').pop();
-    router.push(`/dashboard/${username}`);
+    router.push(`/dashboard/${encodeURIComponent(createdUsername)}`);
   };
 
   return (
@@ -102,7 +90,6 @@ export default function CreateBox() {
         animate={{ opacity: 1, scale: 1 }}
         className="z-10 w-full max-w-md bg-[#f4e4bc] p-8 rounded shadow-[0_0_50px_rgba(0,0,0,0.5)] relative"
       >
-        {/* Süsleme */}
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#8b0000] to-transparent opacity-50"></div>
 
         <h1 className="font-cinzel text-3xl text-[#3e2723] text-center mb-2 font-bold">
@@ -113,33 +100,44 @@ export default function CreateBox() {
         </p>
 
         <div className="space-y-6">
+          <div>
+            <label className="block font-cinzel text-[#3e2723] text-sm mb-1">{t.create.fullNameLabel}</label>
+            <input
+              type="text"
+              placeholder={t.create.fullNamePlaceholder}
+              maxLength={60}
+              className="w-full bg-[#e6d5aa]/50 border-b-2 border-[#8b7355] p-2 outline-none text-[#3e2723] font-merriweather focus:border-[#8b0000] transition-colors placeholder-[#8b7355]/50"
+              value={formData.fullName}
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+            />
+          </div>
 
-          {/* Kullanıcı Adı */}
           <div>
             <label className="block font-cinzel text-[#3e2723] text-sm mb-1">{t.create.usernameLabel}</label>
             <input
               type="text"
               placeholder={t.create.usernamePlaceholder}
+              maxLength={24}
               className="w-full bg-[#e6d5aa]/50 border-b-2 border-[#8b7355] p-2 outline-none text-[#3e2723] font-merriweather focus:border-[#8b0000] transition-colors placeholder-[#8b7355]/50"
               value={formData.username}
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
             />
           </div>
 
-          {/* Şifre (PIN) */}
           <div>
             <label className="block font-cinzel text-[#3e2723] text-sm mb-1">{t.create.pinLabel}</label>
             <input
               type="text"
+              inputMode="numeric"
               maxLength={4}
               placeholder="****"
               className="w-full bg-[#e6d5aa]/50 border-b-2 border-[#8b7355] p-2 outline-none text-[#3e2723] font-merriweather tracking-[1em] text-center focus:border-[#8b0000] transition-colors placeholder-[#8b7355]/50"
+              style={{ WebkitTextSecurity: "disc" } as React.CSSProperties}
               value={formData.pin}
-              onChange={(e) => setFormData({ ...formData, pin: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, pin: e.target.value.replace(/[^0-9]/g, "") })}
             />
           </div>
 
-          {/* Buton */}
           <button
             onClick={handleCreate}
             disabled={loading}
@@ -147,20 +145,18 @@ export default function CreateBox() {
           >
             {loading ? t.create.creating : t.create.createButton}
           </button>
-
         </div>
 
         <div className="mt-4 text-center">
-          <Link href="/" className="text-[#8b7355] text-xs hover:text-[#5d4037] font-cinzel">← {t.create.backHome}</Link>
+          <Link href="/" className="text-[#8b7355] text-xs hover:text-[#5d4037] font-cinzel">
+            ← {t.create.backHome}
+          </Link>
         </div>
-
       </motion.div>
 
-      {/* SUCCESS DRAWER */}
       <AnimatePresence>
         {showSuccessDrawer && (
           <>
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -169,7 +165,6 @@ export default function CreateBox() {
               onClick={() => setShowSuccessDrawer(false)}
             />
 
-            {/* Drawer */}
             <motion.div
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
@@ -185,13 +180,23 @@ export default function CreateBox() {
                 </div>
 
                 <h2 className="font-cinzel text-2xl text-[#3e2723] font-bold">{t.create.success.title}</h2>
-                <p className="font-merriweather text-[#5d4037]">
+                <p className="font-merriweather text-[#5d4037] text-sm">
                   {t.create.success.descriptionLine1}<br />
                   {t.create.success.descriptionLine2}
                 </p>
 
+                <div className="bg-[#e6d5aa]/60 border border-[#8b7355]/30 rounded-lg p-3 text-left space-y-1.5 text-xs font-merriweather text-[#3e2723]">
+                  <p className="flex items-start gap-2">
+                    <Info size={14} className="shrink-0 mt-0.5 text-[#8b0000]" />
+                    <span>{t.create.success.rememberedNotice}</span>
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <Info size={14} className="shrink-0 mt-0.5 text-[#8b0000]" />
+                    <span>{t.create.success.minFourNotice}</span>
+                  </p>
+                </div>
+
                 <div className="flex flex-col gap-3">
-                  {/* PAYLAŞ BUTONU */}
                   <button
                     onClick={() => setShowShareDrawer(true)}
                     className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-cinzel font-bold rounded shadow-lg hover:scale-[1.02] transition-transform flex items-center justify-center gap-2"
@@ -207,12 +212,10 @@ export default function CreateBox() {
                     {t.create.success.goToBox}
                   </button>
 
-                  {/* TAKVİM HATIRLATICI */}
                   <div className="mt-2">
                     <CalendarReminder />
                   </div>
                 </div>
-
               </div>
             </motion.div>
           </>
@@ -222,14 +225,14 @@ export default function CreateBox() {
       <ShareDrawer
         isOpen={showShareDrawer}
         onClose={() => setShowShareDrawer(false)}
-        username={formData.username} // Created linkten parse etmek yerine formdan alabiliriz çünkü başarılı ise değişmemiştir
+        username={createdUsername || formData.username}
       />
 
       <WarningPopup
-        isOpen={showWarning}
-        onClose={() => setShowWarning(false)}
+        isOpen={Boolean(warningMessage)}
+        onClose={() => setWarningMessage("")}
         title={t.create.warningTitle}
-        message={t.create.warningNoSpaces}
+        message={warningMessage}
       />
     </main>
   );

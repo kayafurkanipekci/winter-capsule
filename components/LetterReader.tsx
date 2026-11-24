@@ -29,10 +29,10 @@ export default function LetterReader({ content, onClose }: LetterReaderProps) {
         transition={{ type: "spring", duration: 0.8 }}
         className="relative w-full max-w-lg bg-[#f4e4bc] p-8 rounded shadow-[0_0_50px_rgba(251,191,36,0.2)] rotate-1 border border-[#e6d5aa]"
       >
-        {/* Kağıt Dokusu */}
+        {/* Paper texture */}
         <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(#8b7355_1px,transparent_1px)] [background-size:16px_16px]"></div>
 
-        {/* Üst Kısım */}
+        {/* Header */}
         <div className="flex justify-between items-center mb-6 border-b border-[#8b7355]/30 pb-2">
           <span className="text-[#8b7355] font-cinzel text-sm font-bold tracking-widest">
             {t.letterReader.header}
@@ -42,14 +42,14 @@ export default function LetterReader({ content, onClose }: LetterReaderProps) {
           </button>
         </div>
 
-        {/* Mesaj İçeriği */}
+        {/* Message content */}
         <div className="min-h-[300px] max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
           <p className="font-hand text-[#5d4037] text-lg leading-relaxed whitespace-pre-wrap">
             {content}
           </p>
         </div>
 
-        {/* CSS İLE ÇİZİLMİŞ MÜHÜR (Resim yerine bu) */}
+        {/* CSS wax seal */}
         <div className="mt-8 flex justify-end">
           <div className="relative w-20 h-20 bg-[#8b0000] rounded-full border-4 border-[#600000] shadow-lg flex items-center justify-center opacity-90 transform rotate-12">
             <div className="absolute inset-0 border border-[#a52a2a] rounded-full opacity-50 m-1"></div>

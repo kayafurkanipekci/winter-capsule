@@ -17,7 +17,7 @@ export default function Home() {
 
       <AnimatePresence mode="wait">
 
-        {/* 1. GİRİŞ EKRANI */}
+        {/* 1. Intro Screen */}
         <motion.div
           key="home"
           initial={{ opacity: 0, y: 20 }}
@@ -41,7 +41,7 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-12">
-            {/* Giriş Yap Butonu */}
+            {/* Login Button */}
             <Link
               href="/login"
               className="w-48 py-4 bg-[#3e2723] border border-[#5d4037] dark:border-amber-500/30 text-[#f4e4bc] dark:text-amber-100 rounded-lg font-cinzel text-lg hover:bg-[#5d4037] hover:scale-105 transition-all shadow-lg flex items-center justify-center gap-2"
@@ -49,7 +49,7 @@ export default function Home() {
               <span></span> {t.home.login}
             </Link>
 
-            {/* Kayıt Ol Butonu */}
+            {/* Register Button */}
             <Link
               href="/create"
               className="w-48 py-4 bg-[#8b0000] border border-red-500/30 text-white rounded-lg font-cinzel text-lg hover:bg-[#a50000] hover:scale-105 transition-all shadow-[0_0_20px_rgba(139,0,0,0.4)] flex items-center justify-center gap-2"

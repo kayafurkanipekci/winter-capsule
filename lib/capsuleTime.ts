@@ -1,71 +1,113 @@
 const UNLOCK_MONTH_CUTOFF = 8; // September (0-indexed): Sep-Dec target next Jan 1; Jan-Aug stay unlocked for current year
 
 /**
- * Returns the active New Year target year for the capsule.
- * From September through December, targets the upcoming Jan 1 (year + 1).
- * From January through August, targets the current year's Jan 1 (already unlocked).
+ * Returns the current Date, honoring CAPSULE_NOW_OVERRIDE outside production.
  */
+export function getNow(): Date {
+  if (process.env.NODE_ENV !== "production" && process.env.CAPSULE_NOW_OVERRIDE) {
+    const parsed = new Date(process.env.CAPSULE_NOW_OVERRIDE);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed;
+    }
+  }
+  return new Date();
+}
+
+/**
+ * Extracts year and 0-indexed month in Europe/Istanbul (UTC+3).
+ */
+function getIstanbulYearMonth(now: Date): { year: number; month: number } {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: process.env.CAPSULE_TZ || "Europe/Istanbul",
+    year: "numeric",
+    month: "numeric",
+  }).formatToParts(now);
+
+  const year = Number(parts.find((p) => p.type === "year")?.value ?? now.getUTCFullYear());
+  const month = Number(parts.find((p) => p.type === "month")?.value ?? now.getUTCMonth() + 1) - 1;
+  return { year, month };
+}
+
+/**
+ * Returns the active season year.
+ * Sep-Dec -> year + 1 (locked until Jan 1).
+ * Jan-Aug -> year (unlocked).
+ */
+export function getActiveSeason(now: Date = getNow()): number {
+  const { year, month } = getIstanbulYearMonth(now);
+  return month >= UNLOCK_MONTH_CUTOFF ? year + 1 : year;
+}
+
+/**
+ * Returns the unlock instant for a given season: Jan 1 00:00:00 Europe/Istanbul (UTC+3).
+ */
+export function getUnlockInstant(season: number): Date {
+  return new Date(`${season}-01-01T00:00:00+03:00`);
+}
+
+/**
+ * Returns true if the given season has reached its unlock instant.
+ */
+export function isSeasonUnlocked(season: number, now: Date = getNow()): boolean {
+  return now.getTime() >= getUnlockInstant(season).getTime();
+}
+
+// Legacy aliases kept for shared UI helpers
 export function getTargetYear(now: Date = new Date()): number {
-  const year = now.getFullYear();
-  return now.getMonth() >= UNLOCK_MONTH_CUTOFF ? year + 1 : year;
+  return getActiveSeason(now);
 }
 
-/**
- * Returns the unlock Date (Jan 1, 00:00:00 local time) for the active capsule cycle.
- */
 export function getTargetDate(now: Date = new Date()): Date {
-  return new Date(getTargetYear(now), 0, 1, 0, 0, 0);
+  return getUnlockInstant(getActiveSeason(now));
 }
 
 /**
- * Returns the Turkish dative suffix (-a/-e/-ya/-ye) for a 4-digit year (e.g. 2027 -> "'ye").
+ * Returns the Turkish dative suffix (-a/-e/-ya/-ye) for a 4-digit year.
  */
 export function getYearDativeSuffix(year: number): string {
   const lastTwo = year % 100;
   const lastDigit = year % 10;
 
-  // Numbers ending in 0 use the tens digit for vowel harmony
   if (lastDigit === 0) {
     const tensMap: Record<number, string> = {
-      0: "'a",   // 2000 -> iki bin'e? Wait: 2100, 2000 ("bin'e")
-      10: "'a",  // on'a
-      20: "'ye", // yirmi'ye
-      30: "'a",  // otuz'a
-      40: "'a",  // kırk'a
-      50: "'ye", // elli'ye
-      60: "'a",  // altmış'a
-      70: "'e",  // yetmiş'e
-      80: "'e",  // seksen'e
-      90: "'a",  // doksan'a
+      10: "'a",
+      20: "'ye",
+      30: "'a",
+      40: "'a",
+      50: "'ye",
+      60: "'a",
+      70: "'e",
+      80: "'e",
+      90: "'a",
     };
-    if (lastTwo === 0) return "'e"; // 2000 ("iki bin'e")
+    if (lastTwo === 0) return "'e";
     return tensMap[lastTwo] ?? "'a";
   }
 
   const digitMap: Record<number, string> = {
-    1: "'e",  // bir'e
-    2: "'ye", // iki'ye
-    3: "'e",  // üç'e
-    4: "'e",  // dört'e -> dörd'e
-    5: "'e",  // beş'e
-    6: "'ya", // altı'ya
-    7: "'ye", // yedi'ye
-    8: "'e",  // sekiz'e
-    9: "'a",  // dokuz'a
+    1: "'e",
+    2: "'ye",
+    3: "'e",
+    4: "'e",
+    5: "'e",
+    6: "'ya",
+    7: "'ye",
+    8: "'e",
+    9: "'a",
   };
 
   return digitMap[lastDigit] ?? "'a";
 }
 
 /**
- * Returns the Turkish locative suffix (-da/-de) for a 4-digit year (e.g. 2027 -> "'de").
+ * Returns the Turkish locative suffix (-da/-de/-ta/-te) for a 4-digit year.
  */
 export function getYearLocativeSuffix(year: number): string {
   const lastTwo = year % 100;
   const lastDigit = year % 10;
 
   if (lastDigit === 0) {
-    if (lastTwo === 0) return "'de"; // iki bin'de
+    if (lastTwo === 0) return "'de";
     const tensMap: Record<number, string> = {
       10: "'da",
       20: "'de",

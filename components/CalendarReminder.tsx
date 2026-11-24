@@ -16,7 +16,7 @@ export default function CalendarReminder() {
         }
     }, []);
 
-    // 1 Ocak <targetYear> 00:00 (kullanıcının yerel saatine göre)
+    // Jan 1 <targetYear> 00:00 in user's local time
     const title = encodeURIComponent(t.calendarReminder.eventTitle);
     const details = encodeURIComponent(t.calendarReminder.eventDetails(origin));
     const dates = `${targetYear}0101T000000/${targetYear}0101T010000`;
