@@ -224,7 +224,7 @@ export default function PersonalDashboard({ params }: PageProps) {
               type="button"
               onClick={() => setShowAvatarModal(true)}
               title={t.avatar.customizeButton}
-              className="relative group border-2 border-[#2b1b17] bg-[#0f2419] p-1 shadow-[3px_3px_0_#2b1b17] hover:-translate-y-0.5 transition-transform"
+              className="relative group border-2 border-[#2b1b17] bg-[#faf3e0] dark:bg-[#0f2419] p-1 shadow-[3px_3px_0_#2b1b17] hover:-translate-y-0.5 transition-transform"
             >
               <PixelAvatar
                 config={user.avatarId ?? generateRandomAvatar(user.username)}

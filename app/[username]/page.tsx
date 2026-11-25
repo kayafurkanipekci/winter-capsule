@@ -459,7 +459,7 @@ export default function UserPage({ params }: PageProps) {
           >
             <div className="flex items-end justify-center gap-4">
               <PixelSprite name="pine_tree" width={54} height={72} />
-              <div className="border-2 border-[#2b1b17] bg-[#0f2419] p-1 shadow-[3px_3px_0_#2b1b17]">
+              <div className="border-2 border-[#2b1b17] bg-[#faf3e0] dark:bg-[#0f2419] p-1 shadow-[3px_3px_0_#2b1b17]">
                 <PixelAvatar
                   config={boxInfo?.box.avatarId ?? generateRandomAvatar(displayReceiver)}
                   size={56}
@@ -544,7 +544,7 @@ export default function UserPage({ params }: PageProps) {
                 <>
                   <div className="pixel-inset p-2.5 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="border-2 border-[#2b1b17] bg-[#0f2419] p-1 shrink-0">
+                      <div className="border-2 border-[#2b1b17] bg-[#faf3e0] dark:bg-[#0f2419] p-1 shrink-0">
                         <PixelAvatar config={avatarConfig} size={44} />
                       </div>
                       <span className="font-cinzel font-bold text-xs text-[#2b1b17] truncate">
@@ -673,7 +673,7 @@ export default function UserPage({ params }: PageProps) {
                     </p>
                     <div className="pixel-inset p-2.5 mt-3 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="border-2 border-[#2b1b17] bg-[#0f2419] p-1 shrink-0">
+                        <div className="border-2 border-[#2b1b17] bg-[#faf3e0] dark:bg-[#0f2419] p-1 shrink-0">
                           <PixelAvatar config={avatarConfig} size={44} />
                         </div>
                         <span className="font-cinzel font-bold text-xs text-[#2b1b17] truncate">

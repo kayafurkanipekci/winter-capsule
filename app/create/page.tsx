@@ -168,7 +168,7 @@ export default function CreateBox() {
           {/* Random Pixel Avatar Preview + Customize */}
           <div className="pixel-inset p-3 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="border-2 border-[#2b1b17] bg-[#0f2419] p-1 shrink-0">
+              <div className="border-2 border-[#2b1b17] bg-[#faf3e0] dark:bg-[#0f2419] p-1 shrink-0">
                 <PixelAvatar config={avatarConfig} size={56} />
               </div>
               <div className="min-w-0">
