@@ -10,7 +10,7 @@
   --pixel-shadow: #3e2723;
 }
 
-[class="dark"] {
+.dark {
   /* Dark Mode: Cozy Christmas Pine Night */
   --background: #0a1410;
   --foreground: #f4e4bc;
@@ -43,7 +43,7 @@ body.avatar-modal-open .global-theme-toggle {
     6px 6px 0 0 var(--pixel-shadow);
 }
 
-[class="dark"] .pixel-panel {
+.dark .pixel-panel {
   box-shadow:
     inset 0 0 0 3px #e6d5aa,
     0 0 0 2px rgba(251, 191, 36, 0.35),
