@@ -9,9 +9,19 @@ interface MailboxProps {
   isLocked: boolean;
   onClick: () => void;
   isOpen: boolean;
+  snowmanFacingLeft?: boolean;
+  snowmanThrowing?: boolean;
 }
 
-export default function Mailbox({ username, messageCount, isLocked, onClick, isOpen }: MailboxProps) {
+export default function Mailbox({
+  username,
+  messageCount,
+  isLocked,
+  onClick,
+  isOpen,
+  snowmanFacingLeft = false,
+  snowmanThrowing = false,
+}: MailboxProps) {
   const spriteName = isLocked ? "mailbox_locked" : isOpen ? "mailbox_open" : "mailbox_closed";
 
   return (
@@ -62,12 +72,21 @@ export default function Mailbox({ username, messageCount, isLocked, onClick, isO
           </div>
         </motion.div>
 
-        <PixelSprite
-          name="snowman"
-          width={60}
-          height={72}
-          className="shrink-0 drop-shadow-[2px_2px_0_rgba(43,27,23,0.4)]"
-        />
+        <motion.div
+          animate={{
+            scaleX: snowmanFacingLeft ? -1 : 1,
+            y: snowmanThrowing ? -6 : 0,
+          }}
+          transition={{ duration: 0.18 }}
+          className="shrink-0"
+        >
+          <PixelSprite
+            name="snowman"
+            width={60}
+            height={72}
+            className="drop-shadow-[2px_2px_0_rgba(43,27,23,0.4)]"
+          />
+        </motion.div>
       </div>
 
       {/* Snowy Pixel Ground Strip */}

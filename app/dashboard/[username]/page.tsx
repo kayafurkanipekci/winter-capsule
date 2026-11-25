@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import SnowEffect from "@/components/SnowEffect";
 import Mailbox from "@/components/Mailbox";
+import MailboxDefenseScene from "@/components/MailboxDefenseScene";
 import PixelSprite from "@/components/PixelSprite";
 import PixelAvatar from "@/components/avatar/PixelAvatar";
 import AvatarCreatorModal from "@/components/avatar/AvatarCreatorModal";
@@ -252,13 +253,19 @@ export default function PersonalDashboard({ params }: PageProps) {
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col items-center gap-6 w-full"
         >
-          <Mailbox
-            username={user.fullName}
-            messageCount={currentSeasonInfo.cardCount}
-            isLocked={!currentSeasonInfo.isUnlocked}
-            onClick={() => {}}
-            isOpen={false}
-          />
+          <MailboxDefenseScene>
+            {({ snowmanFacingLeft, snowmanThrowing }) => (
+              <Mailbox
+                username={user.fullName}
+                messageCount={currentSeasonInfo.cardCount}
+                isLocked={!currentSeasonInfo.isUnlocked}
+                onClick={() => {}}
+                isOpen={false}
+                snowmanFacingLeft={snowmanFacingLeft}
+                snowmanThrowing={snowmanThrowing}
+              />
+            )}
+          </MailboxDefenseScene>
 
           <div className="pixel-panel p-5 text-center w-full space-y-3">
             <div className="flex items-center justify-center gap-2">
