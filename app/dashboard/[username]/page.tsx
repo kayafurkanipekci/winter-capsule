@@ -1,16 +1,24 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useLayoutEffect, useState, use } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import SnowEffect from "@/components/SnowEffect";
 import Mailbox from "@/components/Mailbox";
 import PixelSprite from "@/components/PixelSprite";
+import PixelAvatar from "@/components/avatar/PixelAvatar";
+import AvatarCreatorModal from "@/components/avatar/AvatarCreatorModal";
 import ShareDrawer from "@/components/ShareDrawer";
 import CalendarReminder from "@/components/CalendarReminder";
-import { LogOut, Share2 } from "lucide-react";
+import { LogOut, Palette, Share2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/context";
 import { normalizeName } from "@/lib/normalize";
+import {
+  AvatarConfig,
+  decodeAvatarId,
+  encodeAvatarId,
+  generateRandomAvatar,
+} from "@/lib/avatar";
 
 interface SeasonSummary {
   season: number;
@@ -34,6 +42,7 @@ interface DashboardUser {
   id: string;
   username: string;
   fullName: string;
+  avatarId?: string | null;
 }
 
 interface PageProps {
@@ -53,6 +62,18 @@ export default function PersonalDashboard({ params }: PageProps) {
   const [authoredCards, setAuthoredCards] = useState<AuthoredCard[]>([]);
   const [timeLeft, setTimeLeft] = useState("");
   const [showShareDrawer, setShowShareDrawer] = useState(false);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const [cachedAvatar, setCachedAvatar] = useState<string | null | undefined>(undefined);
+
+  const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
+  useIsomorphicLayoutEffect(() => {
+    try {
+      const stored = localStorage.getItem(`kapsul_avatar_${normalizeName(routeUsername)}`);
+      setCachedAvatar(stored ?? null);
+    } catch {
+      setCachedAvatar(null);
+    }
+  }, [routeUsername]);
 
   useEffect(() => {
     let cancelled = false;
@@ -79,6 +100,17 @@ export default function PersonalDashboard({ params }: PageProps) {
         }
 
         setUser(dashData.user);
+        if (dashData.user.avatarId) {
+          setCachedAvatar(dashData.user.avatarId);
+          try {
+            localStorage.setItem(
+              `kapsul_avatar_${normalizeName(routeUsername)}`,
+              dashData.user.avatarId
+            );
+          } catch {
+            // ignore
+          }
+        }
         setSeasons(dashData.seasons ?? []);
         setActiveSeason(dashData.activeSeason ?? null);
         setAuthoredCards(authoredData?.cards ?? []);
@@ -146,7 +178,15 @@ export default function PersonalDashboard({ params }: PageProps) {
     return (
       <main className="relative min-h-screen bg-background flex flex-col items-center justify-center p-4 gap-3">
         <SnowEffect />
-        <PixelSprite name="santa_cat" width={56} height={56} className="z-10 animate-bounce" />
+        {cachedAvatar !== undefined ? (
+          <PixelAvatar
+            config={cachedAvatar ?? generateRandomAvatar(routeUsername)}
+            size={64}
+            className="z-10 animate-bounce"
+          />
+        ) : (
+          <div className="w-16 h-16 z-10" />
+        )}
         <p className="z-10 font-cinzel text-[#2b1b17] dark:text-amber-300 font-bold">
           {t.dashboard.loading}
         </p>
@@ -179,7 +219,20 @@ export default function PersonalDashboard({ params }: PageProps) {
       <div className="z-10 w-full max-w-2xl flex flex-col items-center mt-8 gap-7 pb-20">
         <div className="text-center space-y-3">
           <div className="flex items-center justify-center gap-3">
-            <PixelSprite name="santa_cat" width={40} height={40} />
+            <button
+              type="button"
+              onClick={() => setShowAvatarModal(true)}
+              title={t.avatar.customizeButton}
+              className="relative group border-2 border-[#2b1b17] bg-[#0f2419] p-1 shadow-[3px_3px_0_#2b1b17] hover:-translate-y-0.5 transition-transform"
+            >
+              <PixelAvatar
+                config={user.avatarId ?? generateRandomAvatar(user.username)}
+                size={48}
+              />
+              <span className="absolute -bottom-1.5 -right-1.5 bg-[#f4e4bc] text-[#2b1b17] border-2 border-[#2b1b17] p-0.5">
+                <Palette size={11} />
+              </span>
+            </button>
             <h1 className="font-cinzel text-3xl md:text-4xl font-bold text-[#2b1b17] dark:text-amber-400">
               {user.fullName}
             </h1>
@@ -207,16 +260,13 @@ export default function PersonalDashboard({ params }: PageProps) {
             isOpen={false}
           />
 
-          <div className="pixel-panel p-5 text-center max-w-md w-full space-y-3">
+          <div className="pixel-panel p-5 text-center w-full space-y-3">
             <div className="flex items-center justify-center gap-2">
               <PixelSprite name="gift_box" width={28} height={28} />
               <p className="font-cinzel text-lg font-bold text-[#2b1b17]">
                 {t.dashboard.cardsCollected(currentSeasonInfo.cardCount)}
               </p>
             </div>
-            <p className="font-merriweather text-xs text-[#5d4037]">
-              {t.dashboard.minFourHint}
-            </p>
 
             {(currentSeasonInfo.isUnlocked || currentSeasonInfo.status !== "collecting") && (
               <button
@@ -340,6 +390,34 @@ export default function PersonalDashboard({ params }: PageProps) {
         isOpen={showShareDrawer}
         onClose={() => setShowShareDrawer(false)}
         username={user.username}
+      />
+
+      <AvatarCreatorModal
+        open={showAvatarModal}
+        initialConfig={
+          user.avatarId
+            ? decodeAvatarId(user.avatarId)
+            : generateRandomAvatar(user.username)
+        }
+        onClose={() => setShowAvatarModal(false)}
+        onConfirm={async (_cfg: AvatarConfig, encodedId: string) => {
+          setUser((prev) => (prev ? { ...prev, avatarId: encodedId } : prev));
+          setCachedAvatar(encodedId);
+          setShowAvatarModal(false);
+          try {
+            localStorage.setItem(
+              `kapsul_avatar_${normalizeName(routeUsername)}`,
+              encodedId
+            );
+          } catch {
+            // ignore
+          }
+          await fetch("/api/me/avatar", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ avatarId: encodedId }),
+          }).catch(() => {});
+        }}
       />
     </main>
   );

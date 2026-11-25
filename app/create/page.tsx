@@ -1,16 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SnowEffect from "@/components/SnowEffect";
 import PixelSprite from "@/components/PixelSprite";
+import PixelAvatar from "@/components/avatar/PixelAvatar";
+import AvatarCreatorModal from "@/components/avatar/AvatarCreatorModal";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Check, Copy, Info, Share2 } from "lucide-react";
+import { Check, Copy, Info, Palette, Share2 } from "lucide-react";
 import ShareDrawer from "@/components/ShareDrawer";
 import CalendarReminder from "@/components/CalendarReminder";
 import WarningPopup from "@/components/WarningPopup";
 import { useI18n } from "@/lib/i18n/context";
+import { normalizeName } from "@/lib/normalize";
+import {
+  AvatarConfig,
+  DEFAULT_AVATAR,
+  decodeAvatarId,
+  encodeAvatarId,
+  generateRandomAvatar,
+} from "@/lib/avatar";
 
 export default function CreateBox() {
   const { t } = useI18n();
@@ -28,6 +38,27 @@ export default function CreateBox() {
   const [copied, setCopied] = useState(false);
   const [showShareDrawer, setShowShareDrawer] = useState(false);
   const [warningMessage, setWarningMessage] = useState("");
+  const [avatarConfig, setAvatarConfig] = useState<AvatarConfig>(DEFAULT_AVATAR);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("kapsul_anon_profile");
+      if (raw) {
+        const parsed = JSON.parse(raw) as { fullName?: string; avatarId?: string };
+        if (parsed.fullName) {
+          setFormData((prev) => ({ ...prev, fullName: prev.fullName || parsed.fullName! }));
+        }
+        if (parsed.avatarId) {
+          setAvatarConfig(decodeAvatarId(parsed.avatarId));
+          return;
+        }
+      }
+    } catch {
+      // ignore storage errors
+    }
+    setAvatarConfig(generateRandomAvatar());
+  }, []);
 
   const handleCreate = async () => {
     if (!formData.fullName.trim() || !formData.username.trim() || formData.pin.length < 4) {
@@ -51,6 +82,7 @@ export default function CreateBox() {
           username: formData.username.trim(),
           pin: formData.pin,
           showWrongGuess: formData.showWrongGuess,
+          avatarId: encodeAvatarId(avatarConfig),
         }),
       });
 
@@ -71,6 +103,13 @@ export default function CreateBox() {
       }
 
       const finalUsername: string = data.user.username;
+      const savedAvatarId: string = data.user.avatarId ?? encodeAvatarId(avatarConfig);
+      try {
+        localStorage.setItem(`kapsul_avatar_${normalizeName(finalUsername)}`, savedAvatarId);
+        localStorage.removeItem("kapsul_anon_profile");
+      } catch {
+        // ignore
+      }
       const link = `${window.location.origin}/${finalUsername}`;
       setCreatedUsername(finalUsername);
       setCreatedLink(link);
@@ -126,6 +165,31 @@ export default function CreateBox() {
         </p>
 
         <div className="space-y-5">
+          {/* Random Pixel Avatar Preview + Customize */}
+          <div className="pixel-inset p-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="border-2 border-[#2b1b17] bg-[#0f2419] p-1 shrink-0">
+                <PixelAvatar config={avatarConfig} size={56} />
+              </div>
+              <div className="min-w-0">
+                <div className="font-cinzel font-bold text-xs sm:text-sm text-[#2b1b17] truncate">
+                  {t.avatar.yourCharacter}
+                </div>
+                <div className="font-merriweather text-[11px] text-[#5d4037]">
+                  {t.avatar.randomizeButton}
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowAvatarModal(true)}
+              className="pixel-btn bg-[#e6d5aa] text-[#2b1b17] px-3 py-2 font-pixel text-xs flex items-center gap-1.5 shrink-0"
+            >
+              <Palette size={14} />
+              <span>{t.avatar.customizeButton}</span>
+            </button>
+          </div>
+
           <div>
             <label className="block font-cinzel font-bold text-[#2b1b17] text-sm mb-1">{t.create.fullNameLabel}</label>
             <input
@@ -215,7 +279,7 @@ export default function CreateBox() {
               <div className="text-center space-y-4">
                 <div className="flex items-center justify-center gap-3">
                   <PixelSprite name="gift_box" width={44} height={44} />
-                  <PixelSprite name="santa_cat" width={48} height={48} />
+                  <PixelAvatar config={avatarConfig} size={48} />
                 </div>
 
                 <h2 className="font-cinzel text-2xl text-[#2b1b17] font-bold">{t.create.success.title}</h2>
@@ -279,6 +343,16 @@ export default function CreateBox() {
         onClose={() => setWarningMessage("")}
         title={t.create.warningTitle}
         message={warningMessage}
+      />
+
+      <AvatarCreatorModal
+        open={showAvatarModal}
+        initialConfig={avatarConfig}
+        onClose={() => setShowAvatarModal(false)}
+        onConfirm={(cfg) => {
+          setAvatarConfig(cfg);
+          setShowAvatarModal(false);
+        }}
       />
     </main>
   );

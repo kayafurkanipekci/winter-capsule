@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSupabase } from "@/lib/server/supabase";
 import { claimAnonymousEntries, createSession } from "@/lib/server/auth";
 import { validateFullName, validatePin, validateUsername } from "@/lib/normalize";
+import { encodeAvatarId, generateRandomAvatar } from "@/lib/avatar";
 
 export const runtime = "nodejs";
 
@@ -28,6 +29,8 @@ export async function POST(request: Request) {
     }
 
     const showWrongGuess = Boolean(body.showWrongGuess);
+    const rawAvatarId = typeof body.avatarId === "string" ? body.avatarId.trim() : "";
+    const avatarId = rawAvatarId || encodeAvatarId(generateRandomAvatar(usernameCheck.usernameNorm));
 
     const supabase = getServerSupabase();
 
@@ -41,7 +44,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "username_taken" }, { status: 409 });
     }
 
-    let created: { id: string; username: string; full_name: string } | null = null;
+    let created: { id: string; username: string; full_name: string; avatar_id?: string | null } | null = null;
     const { data: insertedWithFlag, error: insertError } = await supabase
       .from("users")
       .insert({
@@ -50,13 +53,18 @@ export async function POST(request: Request) {
         pin,
         full_name: fullNameCheck.fullName,
         show_wrong_guess: showWrongGuess,
+        avatar_id: avatarId,
       })
-      .select("id, username, full_name")
+      .select("id, username, full_name, avatar_id")
       .single();
 
     if (insertError) {
-      // Fallback if show_wrong_guess column has not been added to users yet
-      if (insertError.code === "42703" || insertError.message?.includes("show_wrong_guess")) {
+      // Fallback if show_wrong_guess or avatar_id column has not been added to users yet
+      if (
+        insertError.code === "42703" ||
+        insertError.message?.includes("show_wrong_guess") ||
+        insertError.message?.includes("avatar_id")
+      ) {
         const { data: fallbackCreated, error: fallbackErr } = await supabase
           .from("users")
           .insert({
@@ -88,7 +96,10 @@ export async function POST(request: Request) {
     }
 
     await createSession(created.id);
-    await claimAnonymousEntries(created.id);
+    await claimAnonymousEntries(created.id, {
+      fullName: created.full_name,
+      avatarId: created.avatar_id ?? avatarId,
+    });
 
     return NextResponse.json(
       {
@@ -96,6 +107,7 @@ export async function POST(request: Request) {
           id: created.id,
           username: created.username,
           fullName: created.full_name,
+          avatarId: created.avatar_id ?? avatarId,
         },
       },
       { status: 201 }

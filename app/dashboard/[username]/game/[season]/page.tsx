@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState, use, useCallback, useRef } from "react";
+import { useEffect, useLayoutEffect, useState, use, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { toPng } from "html-to-image";
 import SnowEffect from "@/components/SnowEffect";
 import PixelSprite from "@/components/PixelSprite";
+import PixelAvatar from "@/components/avatar/PixelAvatar";
 import PixelRulesModal from "@/components/PixelRulesModal";
+import { generateRandomAvatar } from "@/lib/avatar";
 import {
   Check,
   Download,
@@ -18,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/context";
+import { normalizeName } from "@/lib/normalize";
 
 interface RevealedClue {
   type: "text" | "extra" | "extra2" | "photo";
@@ -66,6 +69,7 @@ interface ResultsState {
 
 interface CircleEntry {
   fullName: string;
+  avatarId?: string | null;
   percent: number;
   isSelf: boolean;
 }
@@ -83,7 +87,18 @@ export default function GamePage({ params }: PageProps) {
   const season = Number(resolved.season);
 
   const [loading, setLoading] = useState(true);
+  const [cachedAvatar, setCachedAvatar] = useState<string | null | undefined>(undefined);
   const [showRulesModal, setShowRulesModal] = useState(false);
+
+  const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
+  useIsomorphicLayoutEffect(() => {
+    try {
+      const stored = localStorage.getItem(`kapsul_avatar_${normalizeName(username)}`);
+      setCachedAvatar(stored ?? null);
+    } catch {
+      setCachedAvatar(null);
+    }
+  }, [username]);
   const [gameState, setGameState] = useState<ActiveGameState | null>(null);
   const [resultsState, setResultsState] = useState<ResultsState | null>(null);
   const [revealing, setRevealing] = useState(false);
@@ -285,7 +300,15 @@ export default function GamePage({ params }: PageProps) {
     return (
       <main className="relative min-h-screen bg-background flex flex-col items-center justify-center p-4 gap-3">
         <SnowEffect />
-        <PixelSprite name="santa_cat" width={56} height={56} className="z-10 animate-bounce" />
+        {cachedAvatar !== undefined ? (
+          <PixelAvatar
+            config={cachedAvatar ?? generateRandomAvatar(username)}
+            size={64}
+            className="z-10 animate-bounce"
+          />
+        ) : (
+          <div className="w-16 h-16 z-10" />
+        )}
         <p className="z-10 font-cinzel text-[#2b1b17] dark:text-amber-300 font-bold">
           {t.game.loading}
         </p>
@@ -339,7 +362,10 @@ export default function GamePage({ params }: PageProps) {
                 >
                   <div className="flex items-center justify-between border-b-2 border-[#8b7355]/40 pb-3">
                     <div className="flex items-center gap-2">
-                      <PixelSprite name="santa_cat" width={30} height={30} />
+                      <PixelAvatar
+                        config={cachedAvatar ?? generateRandomAvatar(username)}
+                        size={32}
+                      />
                       <span className="font-cinzel text-base font-bold tracking-wider text-[#b91c1c]">
                         {t.game.whoAmI}
                       </span>
@@ -466,7 +492,10 @@ export default function GamePage({ params }: PageProps) {
                   ? t.game.results.classicTitle
                   : t.game.results.title}
               </h1>
-              <PixelSprite name="santa_cat" width={40} height={40} />
+              <PixelAvatar
+                config={cachedAvatar ?? generateRandomAvatar(username)}
+                size={40}
+              />
             </div>
 
             {resultsState.mode === "game" ? (
@@ -662,6 +691,10 @@ export default function GamePage({ params }: PageProps) {
                         >
                           <div className="flex items-center gap-2.5">
                             {idx === 0 && <PixelSprite name="trophy_crown" width={20} height={20} />}
+                            <PixelAvatar
+                              config={entry.avatarId ?? generateRandomAvatar(entry.fullName)}
+                              size={32}
+                            />
                             <span className="font-merriweather font-bold text-sm">
                               #{idx + 1} {entry.fullName}{" "}
                               {entry.isSelf ? `(${t.game.results.youLabel})` : ""}

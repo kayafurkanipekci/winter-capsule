@@ -20,11 +20,21 @@ export async function POST(request: Request) {
     }
 
     const supabase = getServerSupabase();
-    const { data: user, error } = await supabase
+    let { data: user, error } = await supabase
       .from("users")
-      .select("id, username, full_name, pin")
+      .select("id, username, full_name, pin, avatar_id")
       .eq("username_norm", usernameNorm)
       .maybeSingle();
+
+    if (error && (error.code === "42703" || error.message?.includes("avatar_id"))) {
+      const fallback = await supabase
+        .from("users")
+        .select("id, username, full_name, pin")
+        .eq("username_norm", usernameNorm)
+        .maybeSingle();
+      user = fallback.data as typeof user;
+      error = fallback.error;
+    }
 
     if (error) {
       return NextResponse.json({ error: "server_error" }, { status: 500 });
@@ -39,13 +49,17 @@ export async function POST(request: Request) {
     }
 
     await createSession(user.id);
-    await claimAnonymousEntries(user.id);
+    await claimAnonymousEntries(user.id, {
+      fullName: user.full_name,
+      avatarId: user.avatar_id ?? null,
+    });
 
     return NextResponse.json({
       user: {
         id: user.id,
         username: user.username,
         fullName: user.full_name,
+        avatarId: user.avatar_id ?? null,
       },
     });
   } catch (err) {

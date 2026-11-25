@@ -280,4 +280,27 @@ export interface Translations {
       resultStoryFilename: string;
     };
   };
+  avatar: {
+    modalTitle: string;
+    yourCharacter: string;
+    anonymousCharacter: string;
+    customizeButton: string;
+    confirmButton: string;
+    randomizeButton: string;
+    male: string;
+    female: string;
+    skinTone: string;
+    eyeColor: string;
+    topLabel: string;
+    bottomLabel: string;
+    shoesLabel: string;
+    tabs: {
+      body: string;
+      hair: string;
+      beard: string;
+      glasses: string;
+      hat: string;
+      outfit: string;
+    };
+  };
 }

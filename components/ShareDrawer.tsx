@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toPng } from "html-to-image";
 import { Download, Copy, Check, X, Instagram, Link2 } from "lucide-react";
 import PixelSprite from "./PixelSprite";
+import PixelCat from "./PixelCat";
 import { getTargetYear } from "@/lib/capsuleTime";
 import { useI18n } from "@/lib/i18n/context";
 
@@ -140,7 +141,7 @@ export default function ShareDrawer({ isOpen, onClose, username }: ShareDrawerPr
                   </div>
                 </div>
                 {isGenerating ? (
-                  <PixelSprite name="santa_cat" width={24} height={24} className="animate-bounce" />
+                  <PixelCat size={24} className="animate-bounce" />
                 ) : (
                   <Download size={20} />
                 )}

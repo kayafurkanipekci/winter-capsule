@@ -29,6 +29,10 @@ body {
   image-rendering: crisp-edges;
 }
 
+body.avatar-modal-open .global-theme-toggle {
+  display: none;
+}
+
 /* Pixel-art UI panels & buttons */
 .pixel-panel {
   background-color: #f4e4bc;

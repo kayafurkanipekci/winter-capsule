@@ -3,12 +3,16 @@
 import { useState, useEffect, use } from "react";
 import SnowEffect from "@/components/SnowEffect";
 import PixelSprite from "@/components/PixelSprite";
+import PixelCat from "@/components/PixelCat";
+import PixelAvatar from "@/components/avatar/PixelAvatar";
+import AvatarCreatorModal from "@/components/avatar/AvatarCreatorModal";
 import WarningPopup from "@/components/WarningPopup";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import {
   Camera,
   Lock,
+  Palette,
   PenLine,
   Plus,
   Trash2,
@@ -16,14 +20,22 @@ import {
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/context";
 import { compressImageToJpeg } from "@/lib/image/compress";
+import { normalizeName } from "@/lib/normalize";
+import {
+  AvatarConfig,
+  DEFAULT_AVATAR,
+  decodeAvatarId,
+  encodeAvatarId,
+  generateRandomAvatar,
+} from "@/lib/avatar";
 
 interface BoxInfoResponse {
-  box: { username: string; fullName: string };
+  box: { username: string; fullName: string; avatarId?: string | null };
   season: number;
   acceptingCards: boolean;
   isOwner: boolean;
   alreadySubmitted: boolean;
-  viewer: { id: string; username: string; fullName: string } | null;
+  viewer: { id: string; username: string; fullName: string; avatarId?: string | null } | null;
 }
 
 type ViewState =
@@ -74,6 +86,28 @@ export default function UserPage({ params }: PageProps) {
   const [submitting, setSubmitting] = useState(false);
   const [submittedAsAnon, setSubmittedAsAnon] = useState(false);
   const [warningMessage, setWarningMessage] = useState("");
+  const [avatarConfig, setAvatarConfig] = useState<AvatarConfig>(DEFAULT_AVATAR);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("kapsul_anon_profile");
+      if (raw) {
+        const parsed = JSON.parse(raw) as { fullName?: string; avatarId?: string };
+        if (parsed.fullName) {
+          setAuthFullName((prev) => prev || parsed.fullName!);
+          setAuthorName((prev) => prev || parsed.fullName!);
+        }
+        if (parsed.avatarId) {
+          setAvatarConfig(decodeAvatarId(parsed.avatarId));
+          return;
+        }
+      }
+    } catch {
+      // ignore storage errors
+    }
+    setAvatarConfig(generateRandomAvatar());
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -166,7 +200,12 @@ export default function UserPage({ params }: PageProps) {
       const endpoint = authTab === "register" ? "/api/auth/register" : "/api/auth/login";
       const payload =
         authTab === "register"
-          ? { fullName: authFullName, username: authUsername.trim(), pin: authPin }
+          ? {
+              fullName: authFullName,
+              username: authUsername.trim(),
+              pin: authPin,
+              avatarId: encodeAvatarId(avatarConfig),
+            }
           : { username: authUsername.trim(), pin: authPin };
 
       const res = await fetch(endpoint, {
@@ -190,6 +229,24 @@ export default function UserPage({ params }: PageProps) {
         setWarningMessage(errorMap[data.error] ?? t.create.errors.genericError);
         setAuthLoading(false);
         return;
+      }
+
+      if (data?.user?.username) {
+        const savedAvatarId =
+          data.user.avatarId ?? (authTab === "register" ? encodeAvatarId(avatarConfig) : null);
+        try {
+          if (savedAvatarId) {
+            localStorage.setItem(
+              `kapsul_avatar_${normalizeName(data.user.username)}`,
+              savedAvatarId
+            );
+          }
+          if (authTab === "register") {
+            localStorage.removeItem("kapsul_anon_profile");
+          }
+        } catch {
+          // ignore
+        }
       }
 
       const boxRes = await fetch(`/api/box/${encodeURIComponent(routeUsername)}`);
@@ -246,6 +303,7 @@ export default function UserPage({ params }: PageProps) {
       fd.set("boxUsername", boxInfo.box.username);
       if (!boxInfo.viewer) {
         fd.set("authorName", authorName.trim());
+        fd.set("avatarId", encodeAvatarId(avatarConfig));
       }
       fd.set("clueText", clueText.trim());
       const cleanedExtras = extraTextClues.map((c) => c.trim()).filter(Boolean);
@@ -277,6 +335,19 @@ export default function UserPage({ params }: PageProps) {
       }
 
       setSubmittedAsAnon(Boolean(data.isAnonymous));
+      if (data.isAnonymous) {
+        try {
+          localStorage.setItem(
+            "kapsul_anon_profile",
+            JSON.stringify({
+              fullName: authorName.trim(),
+              avatarId: encodeAvatarId(avatarConfig),
+            })
+          );
+        } catch {
+          // ignore
+        }
+      }
 
       if (shouldReduceMotion) {
         setViewState("success");
@@ -310,7 +381,7 @@ export default function UserPage({ params }: PageProps) {
       <AnimatePresence mode="wait">
         {viewState === "loading" && (
           <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="z-10 flex flex-col items-center gap-3">
-            <PixelSprite name="santa_cat" width={56} height={56} className="animate-bounce" />
+            <PixelCat size={64} className="animate-bounce" />
             <p className="font-cinzel text-[#2b1b17] dark:text-amber-300 font-bold">{t.userPage.searchingBox}</p>
           </motion.div>
         )}
@@ -388,7 +459,12 @@ export default function UserPage({ params }: PageProps) {
           >
             <div className="flex items-end justify-center gap-4">
               <PixelSprite name="pine_tree" width={54} height={72} />
-              <PixelSprite name="santa_cat" width={56} height={56} />
+              <div className="border-2 border-[#2b1b17] bg-[#0f2419] p-1 shadow-[3px_3px_0_#2b1b17]">
+                <PixelAvatar
+                  config={boxInfo?.box.avatarId ?? generateRandomAvatar(displayReceiver)}
+                  size={56}
+                />
+              </div>
               <PixelSprite name="gift_box" width={40} height={40} />
             </div>
 
@@ -465,20 +541,41 @@ export default function UserPage({ params }: PageProps) {
 
             <form onSubmit={handleInlineAuth} className="space-y-4">
               {authTab === "register" && (
-                <div>
-                  <label className="block font-cinzel font-bold text-[#2b1b17] text-sm mb-1">
-                    {t.create.fullNameLabel}
-                  </label>
-                  <input
-                    type="text"
-                    value={authFullName}
-                    onChange={(e) => setAuthFullName(e.target.value)}
-                    placeholder={t.create.fullNamePlaceholder}
-                    maxLength={60}
-                    required
-                    className="w-full pixel-inset p-2.5 text-[#2b1b17] font-merriweather outline-none focus:border-[#b91c1c]"
-                  />
-                </div>
+                <>
+                  <div className="pixel-inset p-2.5 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="border-2 border-[#2b1b17] bg-[#0f2419] p-1 shrink-0">
+                        <PixelAvatar config={avatarConfig} size={44} />
+                      </div>
+                      <span className="font-cinzel font-bold text-xs text-[#2b1b17] truncate">
+                        {t.avatar.yourCharacter}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowAvatarModal(true)}
+                      className="pixel-btn bg-[#e6d5aa] text-[#2b1b17] px-2.5 py-1.5 font-pixel text-[11px] flex items-center gap-1.5 shrink-0"
+                    >
+                      <Palette size={13} />
+                      <span>{t.avatar.customizeButton}</span>
+                    </button>
+                  </div>
+
+                  <div>
+                    <label className="block font-cinzel font-bold text-[#2b1b17] text-sm mb-1">
+                      {t.create.fullNameLabel}
+                    </label>
+                    <input
+                      type="text"
+                      value={authFullName}
+                      onChange={(e) => setAuthFullName(e.target.value)}
+                      placeholder={t.create.fullNamePlaceholder}
+                      maxLength={60}
+                      required
+                      className="w-full pixel-inset p-2.5 text-[#2b1b17] font-merriweather outline-none focus:border-[#b91c1c]"
+                    />
+                  </div>
+                </>
               )}
 
               <div>
@@ -550,7 +647,10 @@ export default function UserPage({ params }: PageProps) {
                     {displayReceiver}
                   </span>
                 </div>
-                <PixelSprite name="santa_cat" width={28} height={28} />
+                <PixelAvatar
+                  config={boxInfo?.box.avatarId ?? generateRandomAvatar(displayReceiver)}
+                  size={32}
+                />
               </div>
 
               <div>
@@ -567,9 +667,29 @@ export default function UserPage({ params }: PageProps) {
                   className="w-full pixel-inset p-2.5 text-[#2b1b17] font-merriweather outline-none focus:border-[#b91c1c] disabled:opacity-75"
                 />
                 {!boxInfo?.viewer && (
-                  <p className="text-[11px] text-[#5d4037] mt-1 font-merriweather">
-                    {t.userPage.form.authorNameHint}
-                  </p>
+                  <>
+                    <p className="text-[11px] text-[#5d4037] mt-1 font-merriweather">
+                      {t.userPage.form.authorNameHint}
+                    </p>
+                    <div className="pixel-inset p-2.5 mt-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="border-2 border-[#2b1b17] bg-[#0f2419] p-1 shrink-0">
+                          <PixelAvatar config={avatarConfig} size={44} />
+                        </div>
+                        <span className="font-cinzel font-bold text-xs text-[#2b1b17] truncate">
+                          {t.avatar.anonymousCharacter}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowAvatarModal(true)}
+                        className="pixel-btn bg-[#e6d5aa] text-[#2b1b17] px-2.5 py-1.5 font-pixel text-[11px] flex items-center gap-1.5 shrink-0"
+                      >
+                        <Palette size={13} />
+                        <span>{t.avatar.customizeButton}</span>
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
 
@@ -831,7 +951,7 @@ export default function UserPage({ params }: PageProps) {
             <div className="bg-[#e6d5aa] border-3 border-[#2b1b17] shadow-[4px_4px_0_#2b1b17] p-4 space-y-3">
               <div className="flex items-center justify-between border-b-2 border-[#8b7355]/40 pb-2">
                 <div className="flex items-center gap-2">
-                  <PixelSprite name="santa_cat" width={24} height={24} />
+                  <PixelAvatar config={boxInfo?.viewer?.avatarId ?? avatarConfig} size={28} />
                   <span className="font-cinzel text-xs font-bold uppercase text-[#b91c1c]">
                     {t.game.results.cluesLabel}
                   </span>
@@ -967,7 +1087,10 @@ export default function UserPage({ params }: PageProps) {
           >
             <div className="flex items-center justify-center gap-3">
               <PixelSprite name="gift_box" width={44} height={44} />
-              <PixelSprite name="santa_cat" width={48} height={48} />
+              <PixelAvatar
+                config={boxInfo?.box.avatarId ?? generateRandomAvatar(displayReceiver)}
+                size={48}
+              />
             </div>
 
             <h2 className="font-cinzel text-2xl text-[#2b1b17] font-bold">
@@ -1019,6 +1142,16 @@ export default function UserPage({ params }: PageProps) {
         onClose={() => setWarningMessage("")}
         title={t.create.warningTitle}
         message={warningMessage}
+      />
+
+      <AvatarCreatorModal
+        open={showAvatarModal}
+        initialConfig={avatarConfig}
+        onClose={() => setShowAvatarModal(false)}
+        onConfirm={(cfg) => {
+          setAvatarConfig(cfg);
+          setShowAvatarModal(false);
+        }}
       />
     </main>
   );

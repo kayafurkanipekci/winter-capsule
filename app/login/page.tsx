@@ -6,8 +6,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import SnowEffect from "@/components/SnowEffect";
 import PixelSprite from "@/components/PixelSprite";
+import PixelCat from "@/components/PixelCat";
 import { Copy, Check, HelpCircle } from "lucide-react";
 import { useI18n } from "@/lib/i18n/context";
+import { normalizeName } from "@/lib/normalize";
 
 export default function LoginPage() {
   const { t } = useI18n();
@@ -69,6 +71,16 @@ export default function LoginPage() {
       } else if (!res.ok) {
         setError(t.create.errors.genericError);
       } else {
+        if (data?.user?.username && data?.user?.avatarId) {
+          try {
+            localStorage.setItem(
+              `kapsul_avatar_${normalizeName(data.user.username)}`,
+              data.user.avatarId
+            );
+          } catch {
+            // ignore
+          }
+        }
         router.push(`/dashboard/${encodeURIComponent(data.user.username)}`);
       }
     } catch (err) {
@@ -89,7 +101,7 @@ export default function LoginPage() {
         className="z-10 w-full max-w-md pixel-panel p-6 sm:p-8"
       >
         <div className="flex items-center justify-center gap-3 mb-2">
-          <PixelSprite name="santa_cat" width={40} height={40} />
+          <PixelCat size={40} />
           <h1 className="font-cinzel text-3xl text-[#2b1b17] font-bold">{t.login.title}</h1>
         </div>
         <p className="text-center font-merriweather text-[#5d4037] mb-6 text-sm">

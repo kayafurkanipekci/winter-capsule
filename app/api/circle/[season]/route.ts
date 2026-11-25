@@ -45,20 +45,34 @@ export async function GET(
       if (row.author_user_id) circleIds.add(row.author_user_id);
     }
 
-    const { data: sessions } = await supabase
+    let { data: sessions, error: sessionsErr } = await supabase
       .from("game_sessions")
-      .select("owner_id, percent, share_in_circle, users!game_sessions_owner_id_fkey ( full_name )")
+      .select("owner_id, percent, share_in_circle, users!game_sessions_owner_id_fkey ( full_name, avatar_id )")
       .eq("season", season)
       .eq("mode", "game")
       .eq("status", "finished")
       .in("owner_id", Array.from(circleIds));
 
+    if (sessionsErr && (sessionsErr.code === "42703" || sessionsErr.message?.includes("avatar_id"))) {
+      const fallback = await supabase
+        .from("game_sessions")
+        .select("owner_id, percent, share_in_circle, users!game_sessions_owner_id_fkey ( full_name )")
+        .eq("season", season)
+        .eq("mode", "game")
+        .eq("status", "finished")
+        .in("owner_id", Array.from(circleIds));
+      sessions = fallback.data as typeof sessions;
+    }
+
     const entries = (sessions ?? [])
       .filter((s) => s.share_in_circle || s.owner_id === user.id)
       .map((s) => {
-        const owner = Array.isArray(s.users) ? s.users[0] : s.users;
+        const owner = (Array.isArray(s.users) ? s.users[0] : s.users) as
+          | { full_name?: string; avatar_id?: string | null }
+          | undefined;
         return {
           fullName: owner?.full_name ?? "",
+          avatarId: owner?.avatar_id ?? null,
           percent: Number(s.percent ?? 0),
           isSelf: s.owner_id === user.id,
         };

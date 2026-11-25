@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, SkipForward, X } from "lucide-react";
 import PixelSprite from "./PixelSprite";
+import PixelCat from "./PixelCat";
 import { useI18n } from "@/lib/i18n/context";
 
 interface PixelRulesModalProps {
@@ -69,7 +70,7 @@ export default function PixelRulesModal({ isOpen, onClose }: PixelRulesModalProp
             {/* Header with Santa Cat & Holly */}
             <div className="flex items-center justify-center gap-3 border-b-2 border-[#8b7355]/40 pb-3">
               <PixelSprite name="holly" width={24} height={18} />
-              <PixelSprite name="santa_cat" width={36} height={36} />
+              <PixelCat size={36} />
               <h2 className="font-cinzel text-xl sm:text-2xl font-bold text-[#2b1b17]">
                 {t.game.rulesModal.title}
               </h2>

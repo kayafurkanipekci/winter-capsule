@@ -2,6 +2,7 @@ import "server-only";
 import crypto from "crypto";
 import { cookies } from "next/headers";
 import { getServerSupabase } from "./supabase";
+import { normalizeName } from "../normalize";
 
 export const SESSION_COOKIE_NAME = "kapsul_session";
 export const CLAIM_COOKIE_NAME = "kapsul_claim";
@@ -13,6 +14,7 @@ export interface AuthUser {
   id: string;
   username: string;
   fullName: string;
+  avatarId?: string | null;
 }
 
 export function hashToken(token: string): string {
@@ -84,16 +86,29 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   const tokenHash = hashToken(token);
   const nowIso = new Date().toISOString();
 
-  const { data: sessionRow, error } = await supabase
+  let { data: sessionRow, error } = await supabase
     .from("sessions")
-    .select("id, expires_at, users ( id, username, full_name )")
+    .select("id, expires_at, users ( id, username, full_name, avatar_id )")
     .eq("token_hash", tokenHash)
     .gt("expires_at", nowIso)
     .single();
 
+  if (error && (error.code === "42703" || error.message?.includes("avatar_id"))) {
+    const fallback = await supabase
+      .from("sessions")
+      .select("id, expires_at, users ( id, username, full_name )")
+      .eq("token_hash", tokenHash)
+      .gt("expires_at", nowIso)
+      .single();
+    sessionRow = fallback.data as typeof sessionRow;
+    error = fallback.error;
+  }
+
   if (error || !sessionRow) return null;
 
-  const userObj = Array.isArray(sessionRow.users) ? sessionRow.users[0] : sessionRow.users;
+  const userObj = (Array.isArray(sessionRow.users) ? sessionRow.users[0] : sessionRow.users) as
+    | { id: string; username: string; full_name: string; avatar_id?: string | null }
+    | undefined;
   if (!userObj) return null;
 
   const expiresMs = new Date(sessionRow.expires_at).getTime();
@@ -115,14 +130,19 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     id: userObj.id,
     username: userObj.username,
     fullName: userObj.full_name,
+    avatarId: userObj.avatar_id ?? null,
   };
 }
 
 /**
  * Links any anonymous entries matching the kapsul_claim cookie to the user,
- * skipping conflicting rows, and removes the claim cookie.
+ * optionally syncing updated fullName and avatarId, skipping conflicting rows,
+ * and removes the claim cookie.
  */
-export async function claimAnonymousEntries(userId: string): Promise<void> {
+export async function claimAnonymousEntries(
+  userId: string,
+  syncProfile?: { fullName?: string; avatarId?: string | null }
+): Promise<void> {
   const cookieStore = await cookies();
   const claimToken = cookieStore.get(CLAIM_COOKIE_NAME)?.value;
   if (!claimToken) return;
@@ -137,14 +157,33 @@ export async function claimAnonymousEntries(userId: string): Promise<void> {
     .is("author_user_id", null);
 
   if (candidates && candidates.length > 0) {
+    const baseUpdate: Record<string, unknown> = {
+      author_user_id: userId,
+      claim_token_hash: null,
+    };
+    if (syncProfile?.fullName) {
+      baseUpdate.author_name = syncProfile.fullName;
+      baseUpdate.author_name_norm = normalizeName(syncProfile.fullName);
+    }
+
     for (const entry of candidates) {
       if (entry.receiver_id === userId) continue;
+      const withAvatar = syncProfile?.avatarId
+        ? { ...baseUpdate, avatar_id: syncProfile.avatarId }
+        : baseUpdate;
       // Update one-by-one so unique constraint conflicts are safely skipped
-      await supabase
+      const { error } = await supabase
         .from("entries")
-        .update({ author_user_id: userId, claim_token_hash: null })
+        .update(withAvatar)
         .eq("id", entry.id)
         .is("author_user_id", null);
+      if (error && (error.code === "42703" || error.message?.includes("avatar_id"))) {
+        await supabase
+          .from("entries")
+          .update(baseUpdate)
+          .eq("id", entry.id)
+          .is("author_user_id", null);
+      }
     }
   }
 

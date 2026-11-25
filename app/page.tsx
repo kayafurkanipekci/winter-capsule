@@ -2,6 +2,7 @@
 
 import SnowEffect from "@/components/SnowEffect";
 import PixelSprite from "@/components/PixelSprite";
+import PixelCat from "@/components/PixelCat";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
@@ -28,7 +29,7 @@ export default function Home() {
           {/* Cute Pixel Christmas Characters Row */}
           <div className="flex items-end justify-center gap-3 sm:gap-5 pt-4">
             <PixelSprite name="pine_tree" width={54} height={72} className="drop-shadow-[3px_3px_0_rgba(43,27,23,0.45)]" />
-            <PixelSprite name="santa_cat" width={56} height={56} className="drop-shadow-[3px_3px_0_rgba(43,27,23,0.45)]" />
+            <PixelCat size={56} className="drop-shadow-[3px_3px_0_rgba(43,27,23,0.45)]" />
             <PixelSprite name="gift_box" width={40} height={40} className="drop-shadow-[3px_3px_0_rgba(43,27,23,0.45)]" />
             <PixelSprite name="snowman" width={50} height={60} className="drop-shadow-[3px_3px_0_rgba(43,27,23,0.45)]" />
           </div>

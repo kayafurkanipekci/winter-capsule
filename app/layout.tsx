@@ -39,7 +39,7 @@ export default function RootLayout({
         className={`${pixelHead.variable} ${pixelBody.variable} ${courgette.variable} antialiased overflow-x-hidden`}
       >
         <Providers>
-          <div className="fixed top-4 right-4 z-[9999]">
+          <div className="fixed top-4 right-4 z-[9999] global-theme-toggle">
             <ThemeToggle />
           </div>
           {children}

@@ -10,6 +10,7 @@ import {
 } from "@/lib/server/auth";
 import { getActiveSeason } from "@/lib/capsuleTime";
 import { normalizeName, validateFullName } from "@/lib/normalize";
+import { encodeAvatarId, generateRandomAvatar } from "@/lib/avatar";
 
 export const runtime = "nodejs";
 
@@ -197,7 +198,13 @@ export async function POST(request: Request) {
       uploadedPaths.push(path);
     }
 
-    const { error: insertErr } = await supabase.from("entries").insert({
+    const rawAvatarId = String(formData.get("avatarId") ?? "").trim();
+    const avatarId =
+      currentUser?.avatarId ||
+      rawAvatarId ||
+      encodeAvatarId(generateRandomAvatar(`${boxOwner.id}:${authorNameNorm}`));
+
+    const baseRow = {
       id: entryId,
       receiver_id: boxOwner.id,
       season: activeSeason,
@@ -211,7 +218,17 @@ export async function POST(request: Request) {
       note: noteRaw || null,
       note_photo_path: notePhotoPath,
       show_wrong_guess: false,
+    };
+
+    let { error: insertErr } = await supabase.from("entries").insert({
+      ...baseRow,
+      avatar_id: avatarId,
     });
+
+    if (insertErr && (insertErr.code === "42703" || insertErr.message?.includes("avatar_id"))) {
+      const fallback = await supabase.from("entries").insert(baseRow);
+      insertErr = fallback.error;
+    }
 
     if (insertErr) {
       if (uploadedPaths.length > 0) {

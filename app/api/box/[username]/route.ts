@@ -20,11 +20,21 @@ export async function GET(
     }
 
     const supabase = getServerSupabase();
-    const { data: boxOwner, error } = await supabase
+    let { data: boxOwner, error } = await supabase
       .from("users")
-      .select("id, username, full_name")
+      .select("id, username, full_name, avatar_id")
       .eq("username_norm", usernameNorm)
       .maybeSingle();
+
+    if (error && (error.code === "42703" || error.message?.includes("avatar_id"))) {
+      const fallback = await supabase
+        .from("users")
+        .select("id, username, full_name")
+        .eq("username_norm", usernameNorm)
+        .maybeSingle();
+      boxOwner = fallback.data as typeof boxOwner;
+      error = fallback.error;
+    }
 
     if (error) {
       return NextResponse.json({ error: "server_error" }, { status: 500 });
@@ -63,6 +73,7 @@ export async function GET(
       box: {
         username: boxOwner.username,
         fullName: boxOwner.full_name,
+        avatarId: boxOwner.avatar_id ?? null,
       },
       season: activeSeason,
       acceptingCards,
@@ -73,6 +84,7 @@ export async function GET(
             id: currentUser.id,
             username: currentUser.username,
             fullName: currentUser.fullName,
+            avatarId: currentUser.avatarId ?? null,
           }
         : null,
     });
